@@ -13,9 +13,9 @@ export default function Nav() {
     router.refresh();
   }
   return (
-    <nav className="fixed inset-x-0 bottom-3 z-30 mx-auto flex w-[calc(100%-24px)] max-w-lg items-center gap-1 rounded-3xl border border-white/80 bg-white/90 p-2 shadow-soft backdrop-blur">
-      {links.map(([href, label]) => <Link key={href} href={href} className={`flex-1 rounded-2xl px-2 py-3 text-center text-sm font-black ${pathname === href ? "bg-leaf text-white" : "text-slate-600"}`}>{label}</Link>)}
-      <button onClick={logout} className="rounded-2xl px-3 py-3 text-sm font-bold text-slate-400" aria-label="退出登录">退出</button>
+    <nav className="game-nav fixed inset-x-0 bottom-3 z-30 mx-auto flex w-[calc(100%-24px)] max-w-lg items-center gap-1 rounded-[26px] p-2 backdrop-blur">
+      {links.map(([href, label]) => <Link key={href} href={href} className={`flex-1 rounded-2xl px-2 py-3 text-center text-sm font-black transition ${pathname === href ? "border-b-4 border-green-900/25 bg-gradient-to-b from-green-500 to-green-700 text-white" : "text-green-900 hover:bg-white/60"}`}>{label}</Link>)}
+      <button onClick={logout} className="rounded-2xl px-3 py-3 text-sm font-bold text-green-900/50 hover:bg-white/60" aria-label="退出登录">退出</button>
     </nav>
   );
 }

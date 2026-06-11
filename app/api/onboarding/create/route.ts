@@ -1,3 +1,4 @@
+import { randomInt } from "node:crypto";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getUserId } from "@/lib/auth";
@@ -8,7 +9,8 @@ import { prisma } from "@/lib/prisma";
 const schema = z.object({ name: z.string().trim().min(2, "农场名至少 2 个字符").max(24) });
 
 function inviteCode() {
-  return Math.random().toString(36).slice(2, 8).toUpperCase();
+  const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  return Array.from({ length: 6 }, () => alphabet[randomInt(alphabet.length)]).join("");
 }
 
 export async function POST(request: Request) {

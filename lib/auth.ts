@@ -1,20 +1,18 @@
-import { SignJWT, jwtVerify } from "jose";
+import { SignJWT } from "jose";
 import { cookies } from "next/headers";
+import { getJwtSecret } from "@/lib/env";
 import { prisma } from "@/lib/prisma";
-
-const COOKIE_NAME = "together_farm_session";
-const secret = new TextEncoder().encode(
-  process.env.JWT_SECRET || "development-secret",
-);
+import { SESSION_COOKIE_NAME, verifySessionToken } from "@/lib/session";
 
 export async function createSession(userId: string) {
+  const secret = new TextEncoder().encode(getJwtSecret());
   const token = await new SignJWT({ userId })
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
     .setExpirationTime("30d")
     .sign(secret);
   const store = await cookies();
-  store.set(COOKIE_NAME, token, {
+  store.set(SESSION_COOKIE_NAME, token, {
     httpOnly: true,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
@@ -25,17 +23,17 @@ export async function createSession(userId: string) {
 
 export async function clearSession() {
   const store = await cookies();
-  store.delete(COOKIE_NAME);
+  store.delete(SESSION_COOKIE_NAME);
 }
 
 export async function getUserId() {
-  const token = (await cookies()).get(COOKIE_NAME)?.value;
+  const token = (await cookies()).get(SESSION_COOKIE_NAME)?.value;
   if (!token) return null;
   try {
-    const { payload } = await jwtVerify(token, secret);
-    if (typeof payload.userId !== "string") return null;
+    const userId = await verifySessionToken(token);
+    if (!userId) return null;
     const user = await prisma.user.findUnique({
-      where: { id: payload.userId },
+      where: { id: userId },
       select: { id: true },
     });
     return user?.id ?? null;
