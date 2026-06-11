@@ -1,0 +1,165 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String          @id @default(cuid())
+  username     String          @unique
+  passwordHash String
+  createdAt    DateTime        @default(now())
+  membership   FarmMember?
+  messages     Message[]
+  events       FarmEventLog[]
+  loginDays    LoginDay[]
+}
+
+model Farm {
+  id              String           @id @default(cuid())
+  name            String
+  inviteCode      String           @unique
+  coins           Int              @default(500)
+  lovePoints      Int              @default(0)
+  plotCount       Int              @default(4)
+  autoWateredDate String?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  members         FarmMember[]
+  plots           Plot[]
+  pets            FarmPet[]
+  decorations     FarmDecoration[]
+  messages        Message[]
+  events          FarmEventLog[]
+  loginDays       LoginDay[]
+}
+
+model FarmMember {
+  id       String   @id @default(cuid())
+  farmId   String
+  userId   String   @unique
+  role     String   @default("partner")
+  joinedAt DateTime @default(now())
+  farm     Farm     @relation(fields: [farmId], references: [id], onDelete: Cascade)
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([farmId])
+}
+
+model Plot {
+  id                  String    @id @default(cuid())
+  farmId              String
+  index               Int
+  cropKey             String?
+  plantedAt           DateTime?
+  matureAt            DateTime?
+  witherAt            DateTime?
+  growDurationSeconds Int?
+  waterBoostSeconds   Int       @default(0)
+  lastWateredAt       DateTime?
+  farm                Farm      @relation(fields: [farmId], references: [id], onDelete: Cascade)
+
+  @@unique([farmId, index])
+}
+
+model CropConfig {
+  key                 String @id
+  name                String
+  emoji               String
+  rarity              String
+  seedPrice           Int
+  growDurationSeconds Int
+  sellPrice           Int
+  witherAfterSeconds  Int
+  enabled             Boolean @default(true)
+}
+
+model PetConfig {
+  key             String  @id
+  name            String
+  emoji           String
+  description     String
+  price           Int
+  unlockLove      Int     @default(0)
+  sellBonus       Float   @default(0)
+  growBonus       Float   @default(0)
+  waterCooldown   Float   @default(0)
+  autoWaterPlots  Int     @default(0)
+  uniquePerFarm   Boolean @default(true)
+  enabled         Boolean @default(true)
+  farmPets        FarmPet[]
+}
+
+model DecorationConfig {
+  key          String @id
+  name         String
+  emoji        String
+  price        Int
+  unlockLove   Int    @default(0)
+  enabled      Boolean @default(true)
+  decorations  FarmDecoration[]
+}
+
+model FarmPet {
+  id          String    @id @default(cuid())
+  farmId      String
+  petKey      String
+  purchasedAt DateTime  @default(now())
+  farm        Farm      @relation(fields: [farmId], references: [id], onDelete: Cascade)
+  pet         PetConfig @relation(fields: [petKey], references: [key])
+
+  @@index([farmId])
+}
+
+model FarmDecoration {
+  id            String           @id @default(cuid())
+  farmId        String
+  decorationKey String
+  quantity      Int              @default(1)
+  purchasedAt   DateTime         @default(now())
+  farm          Farm             @relation(fields: [farmId], references: [id], onDelete: Cascade)
+  decoration    DecorationConfig @relation(fields: [decorationKey], references: [key])
+
+  @@unique([farmId, decorationKey])
+}
+
+model Message {
+  id        String   @id @default(cuid())
+  farmId    String
+  userId    String
+  content   String
+  createdAt DateTime @default(now())
+  farm      Farm     @relation(fields: [farmId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([farmId, createdAt])
+}
+
+model FarmEventLog {
+  id        String   @id @default(cuid())
+  farmId    String
+  userId    String?
+  type      String
+  payload   String   @default("{}")
+  createdAt DateTime @default(now())
+  farm      Farm     @relation(fields: [farmId], references: [id], onDelete: Cascade)
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([farmId, createdAt])
+}
+
+model LoginDay {
+  id       String @id @default(cuid())
+  farmId   String
+  userId   String
+  dateKey  String
+  rewarded Boolean @default(false)
+  farm     Farm   @relation(fields: [farmId], references: [id], onDelete: Cascade)
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, dateKey])
+  @@index([farmId, dateKey])
+}
