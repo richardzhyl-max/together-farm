@@ -2,6 +2,19 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { io } from "socket.io-client";
+import {
+  BasketIcon,
+  CoinIcon,
+  CropArt,
+  DecorationArt,
+  EnvelopeIcon,
+  FarmHouse,
+  FenceArt,
+  HeartIcon,
+  PetArt,
+  TreeArt,
+  WateringCan,
+} from "@/components/GameAssets";
 import Nav from "@/components/Nav";
 
 type Crop = {
@@ -35,8 +48,6 @@ type Farm = {
   plots: Plot[];
   pets: { key: string; name: string; emoji: string; description: string }[];
   decorations: { key: string; name: string; emoji: string; quantity: number }[];
-  bonuses: { sell: number; grow: number; cooldown: number };
-  expansion: { to: number; price: number } | null;
 };
 
 function formatRemaining(target: string | null, now: number) {
@@ -49,12 +60,19 @@ function formatRemaining(target: string | null, now: number) {
   return `${hours ? `${hours}时` : ""}${minutes}分${secs}秒`;
 }
 
-function cropStage(plot: Plot, now: number) {
-  if (plot.state === "mature") return "crop-stage-ready";
-  if (plot.state !== "growing" || !plot.plantedAt || !plot.growDurationSeconds) return "";
-  const elapsed = Math.max(0, now - new Date(plot.plantedAt).getTime());
-  const progress = elapsed / (plot.growDurationSeconds * 1000);
-  return progress < 0.34 ? "crop-stage-young" : progress < 0.72 ? "crop-stage-mid" : "";
+function stageFor(plot: Plot, now: number): "young" | "mid" | "mature" | "withered" {
+  if (plot.state === "withered") return "withered";
+  if (plot.state === "mature") return "mature";
+  if (!plot.plantedAt || !plot.growDurationSeconds) return "young";
+  const progress = Math.max(0, now - new Date(plot.plantedAt).getTime()) / (plot.growDurationSeconds * 1000);
+  return progress < 0.36 ? "young" : progress < 0.76 ? "mid" : "mature";
+}
+
+function fieldColumns(count: number) {
+  if (count <= 4) return 2;
+  if (count <= 9) return 3;
+  if (count <= 16) return 4;
+  return 5;
 }
 
 export default function FarmClient() {
@@ -92,21 +110,10 @@ export default function FarmClient() {
   useEffect(() => {
     if (!farm) return;
     const stale = farm.plots.some(
-      (plot) =>
-        plot.state === "growing" &&
-        plot.matureAt &&
-        new Date(plot.matureAt).getTime() <= now,
+      (plot) => plot.state === "growing" && plot.matureAt && new Date(plot.matureAt).getTime() <= now,
     );
     if (stale) load();
   }, [now, farm, load]);
-
-  const crops = useMemo(() => {
-    const map = new Map<string, Crop>();
-    farm?.plots.forEach((plot) => {
-      if (plot.crop) map.set(plot.crop.key, plot.crop);
-    });
-    return [...map.values()];
-  }, [farm]);
 
   async function action(path: string, body: object, success: string) {
     setBusy(path);
@@ -122,62 +129,121 @@ export default function FarmClient() {
     setNotice(path.includes("harvest") ? `${success}，获得 ${result.earned} 金币` : success);
     setSelected(null);
     await load();
-    setTimeout(() => setNotice(""), 2500);
+    setTimeout(() => setNotice(""), 2400);
   }
 
   if (!farm) {
     return (
-      <main className="farm-world grid min-h-screen place-items-center text-center">
-        <div className="game-panel px-10 py-8">
-          <div className="crop-bob text-6xl">🌱</div>
-          <p className="mt-4 font-black">{error || "正在走进农场..."}</p>
-        </div>
+      <main className="game-page">
+        <div className="loading-sign">正在打开农场大门...</div>
       </main>
     );
   }
 
+  const columns = fieldColumns(farm.plotCount);
+
   return (
-    <main className="farm-world min-h-screen pb-28 pt-3">
-      <div className="mx-auto max-w-6xl px-3 sm:px-6">
-        <header className="hud sticky top-2 z-20 rounded-[26px] p-3 text-white sm:p-4">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div className="min-w-0">
-              <p className="text-xs font-bold text-green-100">🌿 两个人的共同天地</p>
-              <h1 className="truncate text-xl font-black drop-shadow sm:text-2xl">{farm.name}</h1>
-            </div>
-            <div className="flex flex-wrap justify-end gap-2">
-              <span className="hud-pill">🪙 {farm.coins}</span>
-              <span className="hud-pill text-rose-700">💛 {farm.lovePoints}</span>
-              <button
-                onClick={() =>
-                  navigator.clipboard
-                    .writeText(farm.inviteCode)
-                    .then(() => setNotice("邀请码已复制"))
-                }
-                className="hud-pill"
-              >
-                💌 {farm.inviteCode}
-              </button>
-            </div>
+    <main className="game-page">
+      <div className="farm-canvas">
+        <div className="sky-cloud cloud-one" />
+        <div className="sky-cloud cloud-two" />
+        <div className="mountain mountain-one" />
+        <div className="mountain mountain-two" />
+        <div className="sun-disc" />
+        <div className="grass-speckles" />
+
+        <div className="farm-title-sign">
+          <span className="sign-rope left" />
+          <span className="sign-rope right" />
+          <strong>{farm.name}</strong>
+          <small>{farm.members.map((member) => member.username).join(" ♡ ")}</small>
+        </div>
+
+        <div className="game-hud">
+          <div className="resource-slot">
+            <CoinIcon />
+            <b>{farm.coins}</b>
           </div>
-          <div className="mt-3 flex flex-wrap items-center gap-2 rounded-2xl bg-black/10 px-3 py-2 text-xs font-bold text-green-50">
-            <span>👩‍🌾 农场伙伴</span>
-            {farm.members.map((member) => (
-              <span key={member.id} className="rounded-full bg-white/15 px-2 py-1">
-                {member.username}
-              </span>
-            ))}
-            {farm.members.length < 2 && (
-              <span className="text-yellow-100">等待另一半加入...</span>
-            )}
+          <div className="resource-slot love">
+            <HeartIcon className="h-7 w-8" />
+            <b>{farm.lovePoints}</b>
           </div>
-        </header>
+          <button
+            className="invite-envelope"
+            onClick={() =>
+              navigator.clipboard.writeText(farm.inviteCode).then(() => setNotice("邀请码已复制"))
+            }
+            aria-label={`复制邀请码 ${farm.inviteCode}`}
+          >
+            <EnvelopeIcon className="h-8 w-10" />
+            <span>{farm.inviteCode}</span>
+          </button>
+        </div>
+
+        <FarmHouse className="map-house" />
+        <TreeArt className="map-tree tree-left" />
+        <TreeArt className="map-tree tree-right" />
+        <TreeArt className="map-tree tree-back" />
+        <FenceArt className="map-fence fence-left" />
+        <FenceArt className="map-fence fence-right" />
+        <div className="map-pond">
+          <i />
+          <i />
+          <i />
+        </div>
+        <div className="map-path" />
+
+        <div
+          className={`field-map cols-${columns}`}
+          style={{ "--field-cols": columns } as React.CSSProperties}
+        >
+          {farm.plots.map((plot) => (
+            <button
+              key={plot.id}
+              className={`map-plot ${plot.state}`}
+              onClick={() => setSelected(plot)}
+              aria-label={`${plot.crop?.name || "空地"} ${plot.state}`}
+            >
+              <span className="furrow furrow-a" />
+              <span className="furrow furrow-b" />
+              {plot.crop && (
+                <CropArt
+                  cropKey={plot.crop.key}
+                  stage={stageFor(plot, now)}
+                  className="map-crop"
+                />
+              )}
+              {plot.state === "mature" && <span className="harvest-spark spark-a" />}
+              {plot.state === "mature" && <span className="harvest-spark spark-b" />}
+              {plot.waterBoostSeconds > 0 && <span className="water-drop">●</span>}
+            </button>
+          ))}
+        </div>
+
+        <div className="pet-zone">
+          {farm.pets.map((pet, index) => (
+            <div key={pet.key} className={`map-pet pet-${index % 4}`} title={pet.name}>
+              <PetArt petKey={pet.key} />
+              <span>{pet.name}</span>
+            </div>
+          ))}
+        </div>
+
+        <div className="decoration-zone">
+          {farm.decorations.flatMap((decoration) =>
+            Array.from({ length: Math.min(decoration.quantity, 3) }, (_, index) => (
+              <DecorationArt
+                key={`${decoration.key}-${index}`}
+                decorationKey={decoration.key}
+                className={`map-decoration decor-${(decoration.key.length + index) % 6}`}
+              />
+            )),
+          )}
+        </div>
 
         {(error || notice) && (
           <button
-            className={`fixed left-1/2 top-4 z-50 -translate-x-1/2 rounded-2xl px-5 py-3 font-black text-white shadow-soft ${
-              error ? "bg-red-600" : "bg-green-700"
-            }`}
+            className={`game-toast ${error ? "error" : ""}`}
             onClick={() => {
               setError("");
               setNotice("");
@@ -187,178 +253,63 @@ export default function FarmClient() {
           </button>
         )}
 
-        <section className="field-board relative mt-5 overflow-hidden rounded-[34px] p-4 sm:p-7">
-          <div className="relative mb-5 flex items-center justify-between gap-3">
-            <div className="wood-sign -rotate-1 rounded-2xl px-4 py-2">
-              <h2 className="text-lg font-black sm:text-xl">🌱 今日田地</h2>
-              <p className="text-[11px] text-amber-50 sm:text-xs">
-                点击泥土地进行播种、浇水与收获
-              </p>
-            </div>
-            <span className="hud-pill shrink-0">🧺 {farm.plotCount} 块</span>
-          </div>
-
-          <div className="relative grid grid-cols-2 gap-x-3 gap-y-5 sm:grid-cols-3 sm:gap-5 md:grid-cols-4 lg:grid-cols-5">
-            {farm.plots.map((plot) => (
-              <button
-                key={plot.id}
-                onClick={() => setSelected(plot)}
-                className="plot aspect-[1.2] p-2 text-white transition focus:outline-none focus:ring-4 focus:ring-yellow-200"
-              >
-                <span className="absolute left-2 top-2 z-10 rounded-full bg-[#5d301c]/65 px-2 py-0.5 text-[10px] font-black text-amber-100">
-                  #{plot.index + 1}
-                </span>
-                <div className="grid h-full place-items-center">
-                  {plot.state === "empty" ? (
-                    <div className="relative z-10">
-                      <div className="text-3xl drop-shadow">🌰</div>
-                      <div className="mt-1 rounded-full bg-[#5d301c]/45 px-3 py-1 text-xs font-black">
-                        播种
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="relative z-10">
-                      <div
-                        className={`text-5xl drop-shadow-lg sm:text-6xl ${
-                          plot.state === "growing" ? "crop-bob" : ""
-                        } ${cropStage(plot, now)}`}
-                      >
-                        {plot.state === "withered" ? "🥀" : plot.crop?.emoji}
-                      </div>
-                      <div className="mt-1 text-sm font-black drop-shadow">{plot.crop?.name}</div>
-                      <div
-                        className={`mt-1 rounded-full px-2 py-1 text-[10px] font-black ${
-                          plot.state === "mature"
-                            ? "bg-yellow-300 text-amber-900"
-                            : plot.state === "withered"
-                              ? "bg-stone-700/70"
-                              : "bg-black/30"
-                        }`}
-                      >
-                        {plot.state === "growing"
-                          ? formatRemaining(plot.matureAt, now)
-                          : plot.state === "mature"
-                            ? "✨ 可以收获啦"
-                            : "已枯萎 · 半价"}
-                      </div>
-                    </div>
-                  )}
-                </div>
-                {plot.waterBoostSeconds > 0 && (
-                  <span className="absolute right-2 top-2 z-10 rounded-full bg-sky-100 px-1.5 py-1 text-xs shadow">
-                    💧
-                  </span>
-                )}
-              </button>
-            ))}
-          </div>
-        </section>
-
-        <div className="mt-7 grid gap-5 md:grid-cols-2">
-          <section className="pet-shelf rounded-[30px] p-5">
-            <h2 className="text-lg font-black text-amber-950">🐾 宠物小屋</h2>
-            <p className="text-xs text-amber-900/70">小伙伴们会悄悄帮忙照顾农场</p>
-            <div className="mt-4 flex min-h-28 flex-wrap items-end gap-3">
-              {farm.pets.length ? (
-                farm.pets.map((pet) => (
-                  <div key={pet.key} className="pet-home min-w-24 rounded-[24px] p-3 text-center">
-                    <div className="crop-bob text-5xl">{pet.emoji}</div>
-                    <p className="mt-1 text-xs font-black text-amber-950">{pet.name}</p>
-                    <p className="mt-1 text-[9px] text-amber-900/65">{pet.description}</p>
-                  </div>
-                ))
-              ) : (
-                <div className="flex w-full flex-col items-center py-4 text-amber-900/55">
-                  <span className="text-5xl">🏠</span>
-                  <p className="mt-2 text-sm font-bold">去商城接一只小伙伴回家吧</p>
-                </div>
-              )}
-            </div>
-          </section>
-
-          <section className="game-panel p-5">
-            <h2 className="text-lg font-black">🎀 农场风景</h2>
-            <p className="text-xs text-green-900/60">每一件装饰都记录着共同经营的时光</p>
-            <div className="mt-4 flex min-h-28 flex-wrap items-center gap-3 rounded-3xl bg-gradient-to-b from-sky-100 to-green-100 p-4">
-              {farm.decorations.length ? (
-                farm.decorations.map((item) => (
-                  <div
-                    key={item.key}
-                    className="rounded-2xl border-2 border-white bg-white/70 p-3 text-center shadow-sm"
-                  >
-                    <div className="text-4xl drop-shadow">{item.emoji}</div>
-                    <p className="text-xs font-black">
-                      {item.name} ×{item.quantity}
-                    </p>
-                  </div>
-                ))
-              ) : (
-                <div className="w-full text-center text-green-900/45">
-                  <div className="text-5xl">🌳</div>
-                  <p className="mt-2 text-sm font-bold">添一点属于你们的风景</p>
-                </div>
-              )}
-            </div>
-          </section>
-        </div>
-
         {selected && (
-          <div
-            className="fixed inset-0 z-40 grid place-items-end bg-black/30 p-3 backdrop-blur-sm sm:place-items-center"
-            onClick={() => setSelected(null)}
-          >
-            <div className="game-panel w-full max-w-md p-5" onClick={(event) => event.stopPropagation()}>
-              <div className="flex items-center justify-between">
-                <h3 className="text-xl font-black">第 {selected.index + 1} 块土地</h3>
-                <button className="text-2xl text-slate-400" onClick={() => setSelected(null)}>
-                  ×
-                </button>
+          <div className="plot-menu-layer" onClick={() => setSelected(null)}>
+            <div className="plot-wood-menu" onClick={(event) => event.stopPropagation()}>
+              <button className="menu-close" onClick={() => setSelected(null)}>×</button>
+              <div className="menu-title">
+                {selected.state === "empty" ? "选择种子袋" : selected.crop?.name}
               </div>
               {selected.state === "empty" ? (
-                <div className="mt-4">
-                  <p className="mb-3 text-sm text-slate-500">
-                    选择要种下的作物，种子费用会从共同钱包扣除。
-                  </p>
-                  <CropChoices plotId={selected.id} action={action} busy={busy} fallback={crops} />
-                </div>
+                <SeedBags plotId={selected.id} busy={busy} action={action} />
               ) : (
-                <div className="mt-5 text-center">
-                  <div className="text-7xl">
-                    {selected.state === "withered" ? "🥀" : selected.crop?.emoji}
-                  </div>
-                  <h4 className="mt-2 text-xl font-black">{selected.crop?.name}</h4>
-                  <p className="mt-1 text-sm text-slate-500">
-                    {selected.state === "growing"
-                      ? `距离成熟 ${formatRemaining(selected.matureAt, now)}`
-                      : selected.state === "mature"
-                        ? "成熟啦，快把丰收装进口袋"
-                        : "虽然错过了最佳时间，仍可半价卖出"}
-                  </p>
+                <div className="plot-action-content">
+                  <CropArt
+                    cropKey={selected.crop?.key}
+                    stage={stageFor(selected, now)}
+                    className="menu-crop"
+                  />
                   {selected.state === "growing" && (
-                    <button
-                      className="btn-primary mt-5 w-full"
-                      disabled={Boolean(busy)}
-                      onClick={() =>
-                        action(
-                          "/api/farm/water",
-                          { plotId: selected.id },
-                          "浇水成功，情侣值 +1",
-                        )
-                      }
-                    >
-                      💧 浇水加速 5%
-                    </button>
+                    <>
+                      <p className="menu-timer">距离成熟 {formatRemaining(selected.matureAt, now)}</p>
+                      <button
+                        className="wood-action-button water"
+                        disabled={Boolean(busy)}
+                        onClick={() =>
+                          action("/api/farm/water", { plotId: selected.id }, "浇水成功，情侣值 +1")
+                        }
+                      >
+                        <WateringCan className="h-12 w-16" />
+                        <span>浇水加速</span>
+                      </button>
+                    </>
                   )}
-                  {(selected.state === "mature" || selected.state === "withered") && (
+                  {selected.state === "mature" && (
                     <button
-                      className="btn-primary mt-5 w-full"
+                      className="wood-action-button harvest"
                       disabled={Boolean(busy)}
                       onClick={() =>
                         action("/api/farm/harvest", { plotId: selected.id }, "收获成功")
                       }
                     >
-                      🧺 收获并自动售卖
+                      <BasketIcon className="h-12 w-16" />
+                      <span>收进篮子</span>
                     </button>
+                  )}
+                  {selected.state === "withered" && (
+                    <>
+                      <p className="menu-timer muted">作物已经枯萎，只能半价卖出</p>
+                      <button
+                        className="wood-action-button harvest"
+                        disabled={Boolean(busy)}
+                        onClick={() =>
+                          action("/api/farm/harvest", { plotId: selected.id }, "清理成功")
+                        }
+                      >
+                        <BasketIcon className="h-12 w-16" />
+                        <span>清理土地</span>
+                      </button>
+                    </>
                   )}
                 </div>
               )}
@@ -371,18 +322,16 @@ export default function FarmClient() {
   );
 }
 
-function CropChoices({
+function SeedBags({
   plotId,
-  action,
   busy,
-  fallback,
+  action,
 }: {
   plotId: string;
-  action: (path: string, body: object, success: string) => void;
   busy: string;
-  fallback: Crop[];
+  action: (path: string, body: object, success: string) => void;
 }) {
-  const [crops, setCrops] = useState<Crop[]>(fallback);
+  const [crops, setCrops] = useState<Crop[]>([]);
 
   useEffect(() => {
     fetch("/api/shop")
@@ -391,25 +340,19 @@ function CropChoices({
   }, []);
 
   return (
-    <div className="grid grid-cols-2 gap-3">
+    <div className="seed-bag-grid">
       {crops.map((crop) => (
         <button
           key={crop.key}
+          className="seed-bag"
           disabled={Boolean(busy)}
           onClick={() =>
-            action(
-              "/api/farm/plant",
-              { plotId, cropKey: crop.key },
-              `种下了${crop.name}`,
-            )
+            action("/api/farm/plant", { plotId, cropKey: crop.key }, `种下了${crop.name}`)
           }
-          className="shop-card rounded-2xl bg-gradient-to-b from-green-50 to-lime-100 p-3 text-left"
         >
-          <span className="text-4xl drop-shadow">{crop.emoji}</span>
-          <span className="ml-2 font-black">{crop.name}</span>
-          <p className="mt-1 text-xs text-green-900/60">
-            {crop.rarity} · 🪙 {crop.seedPrice}
-          </p>
+          <CropArt cropKey={crop.key} stage="mid" className="seed-preview" />
+          <b>{crop.name}</b>
+          <span><CoinIcon /> {crop.seedPrice}</span>
         </button>
       ))}
     </div>
