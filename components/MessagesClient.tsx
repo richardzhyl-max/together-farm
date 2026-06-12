@@ -62,23 +62,24 @@ export default function MessagesClient({ userId }: { userId: string }) {
   }
 
   return (
-    <main className="game-page">
-      <div className="message-canvas">
-        <div className="message-hills" />
-        <TreeArt className="message-tree left" />
-        <TreeArt className="message-tree right" />
-        <FarmHouse className="message-house" />
-        <div className="mailbox">
-          <EnvelopeIcon className="h-12 w-14" />
-          <span>每日第一张纸条，情侣值 +1</span>
+    <main className="pixel-game-page">
+      <div className="pixel-game-canvas message-scene">
+        <div className="message-pixel-map">
+          <TreeArt className="message-pixel-tree left" />
+          <TreeArt className="message-pixel-tree right" />
+          <FarmHouse className="message-pixel-house" />
+          <div className="pixel-mailbox">
+            <EnvelopeIcon />
+            <span>每日第一张纸条，情侣值 +1</span>
+          </div>
         </div>
 
-        <div className="note-wall">
-          <div className="note-wall-title">我们的留言小屋</div>
-          <div className="note-scroll">
+        <div className="pixel-note-board">
+          <div className="pixel-note-title">COUPLE MESSAGE WALL</div>
+          <div className="pixel-note-scroll">
             {!messages.length && (
-              <div className="empty-mail">
-                <EnvelopeIcon className="h-20 w-24" />
+              <div className="pixel-empty-mail">
+                <EnvelopeIcon />
                 <p>信箱还空着，写下第一张小纸条吧。</p>
               </div>
             )}
@@ -87,7 +88,7 @@ export default function MessagesClient({ userId }: { userId: string }) {
               return (
                 <article
                   key={message.id}
-                  className={`wall-note note-color-${index % 4} ${mine ? "mine" : ""}`}
+                  className={`pixel-note color-${index % 4} ${mine ? "mine" : ""}`}
                 >
                   <b>{mine ? "我" : message.user.username}</b>
                   <p>{message.content}</p>
@@ -99,7 +100,7 @@ export default function MessagesClient({ userId }: { userId: string }) {
           </div>
         </div>
 
-        <form onSubmit={send} className="mail-compose">
+        <form onSubmit={send} className="pixel-mail-compose">
           <textarea
             name="content"
             rows={2}
@@ -108,13 +109,15 @@ export default function MessagesClient({ userId }: { userId: string }) {
             placeholder="写一张给对方的小纸条..."
           />
           <button disabled={busy}>
-            <EnvelopeIcon className="h-9 w-11" />
+            <EnvelopeIcon />
             {busy ? "投递中" : "投入信箱"}
           </button>
         </form>
 
         {error && (
-          <button className="game-toast error" onClick={() => setError("")}>{error}</button>
+          <button className="pixel-toast error" onClick={() => setError("")}>
+            {error}
+          </button>
         )}
       </div>
       <Nav />

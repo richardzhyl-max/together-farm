@@ -20,18 +20,20 @@ export default function Nav() {
   }
 
   return (
-    <nav className="wood-nav">
+    <nav className="pixel-nav">
       {links.map((link) => (
         <Link
           key={link.href}
           href={link.href}
-          className={`wood-nav-button ${pathname === link.href ? "active" : ""}`}
+          className={`pixel-nav-button ${pathname === link.href ? "active" : ""}`}
         >
-          <span className={`nav-symbol ${link.icon}`} aria-hidden="true" />
+          <span className={`pixel-nav-icon ${link.icon}`} aria-hidden="true" />
           <b>{link.label}</b>
         </Link>
       ))}
-      <button onClick={logout} className="nav-logout" aria-label="退出登录">×</button>
+      <button onClick={logout} className="pixel-logout" aria-label="退出登录">
+        X
+      </button>
     </nav>
   );
 }

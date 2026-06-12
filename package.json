@@ -7,6 +7,7 @@
     "build": "NEXT_TELEMETRY_DISABLED=1 prisma generate && NEXT_TELEMETRY_DISABLED=1 next build --turbopack",
     "start": "NODE_ENV=production NEXT_TELEMETRY_DISABLED=1 tsx server.ts",
     "lint": "next lint",
+    "assets:generate": "node scripts/generate-tiny-ranch-assets.mjs",
     "db:push": "prisma db push",
     "db:seed": "tsx prisma/seed.ts",
     "db:setup": "prisma db push && tsx prisma/seed.ts"

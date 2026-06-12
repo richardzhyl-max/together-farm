@@ -4,12 +4,16 @@
 
 ## 视觉风格
 
-- 原创 Q 版单屏农场地图，不使用或复制第三方游戏素材。
-- 地图包含天空、远山、草地、房屋、树木、栅栏、小路和池塘，HUD、宠物与装饰均直接布置在场景中。
-- 土地采用斜向 2.5D 田垄布局，初始 2×2，扩建后按 3、4、5 列自然铺开。
-- 作物、水壶、金币、爱心、小屋、树木、栅栏和装饰由内联 SVG 与 CSS 绘制，成长、成熟、枯萎有不同动画与色彩状态。
-- 商城是村口小卖部柜台场景，留言页是情侣留言小屋与信箱墙，底部导航使用悬挂木牌。
-- 手机端使用约 430px 游戏画布，桌面端使用最大 960px 固定画布居中展示。
+- Cozy Pixel Farm：统一的俯视像素地图、RPG 商店、情侣留言墙和像素 HUD。
+- 农场使用 Tile Map 思路组织草地、泥土、道路、池塘、建筑、树木、围栏和可交互土地。
+- 土地保持现有扩建规则，作物根据服务端状态自动切换幼苗、成长、成熟和枯萎帧。
+- 宠物使用精灵表 Idle 动画，成熟提示、浇水粒子和操作反馈均采用低成本像素动画。
+- 手机端使用约 430px 游戏画布，桌面端固定宽度居中展示。
+
+像素美术使用 Gustavo Vituri 的免费
+[`[8x8] Tiny Ranch Asset Pack`](https://gvituri.itch.io/tiny-ranch)。
+作者允许个人及商业项目使用和修改，但禁止重新分发素材包，因此素材文件不会提交到 Git。
+本地安装方法见 [`docs/PIXEL_ASSETS.md`](docs/PIXEL_ASSETS.md)。
 
 ## 技术栈
 
@@ -50,6 +54,7 @@ npm run dev
 npm run dev       # 启动开发服务器
 npm run build     # Prisma generate + Next.js 生产构建
 npm run start     # 启动生产服务器
+npm run assets:generate # 从本地 Tiny Ranch 精灵表生成运行时地形切片
 npm run db:push   # 同步 Prisma schema 到 SQLite
 npm run db:seed   # 写入作物、宠物和装饰配置
 npm run db:setup  # 初始化数据库并写入配置

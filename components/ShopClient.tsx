@@ -5,8 +5,10 @@ import {
   CoinIcon,
   CropArt,
   DecorationArt,
+  FarmHouse,
   HeartIcon,
   PetArt,
+  SeedBagArt,
   TreeArt,
 } from "@/components/GameAssets";
 import Nav from "@/components/Nav";
@@ -68,40 +70,46 @@ export default function ShopClient() {
   }
 
   if (!shop) {
-    return <main className="game-page"><div className="loading-sign">正在打开小卖部...</div></main>;
+    return (
+      <main className="pixel-game-page">
+        <div className="pixel-loading">LOADING SHOP...</div>
+      </main>
+    );
   }
 
   return (
-    <main className="game-page">
-      <div className="shop-canvas">
-        <div className="shop-sky" />
-        <TreeArt className="shop-tree shop-tree-left" />
-        <TreeArt className="shop-tree shop-tree-right" />
-        <div className="shop-building">
-          <div className="shop-roof"><span>村口小卖部</span></div>
-          <div className="shop-awning" />
-          <div className="shop-window">
-            <div className="shopkeeper">
-              <span className="shopkeeper-head" />
-              <span className="shopkeeper-body" />
-            </div>
-            <p>欢迎光临，今天想带点什么？</p>
-          </div>
-          <div className="shop-counter" />
+    <main className="pixel-game-page">
+      <div className="pixel-game-canvas shop-scene">
+        <div className="shop-map">
+          <TreeArt className="shop-pixel-tree left" />
+          <TreeArt className="shop-pixel-tree right" />
+          <FarmHouse className="shop-pixel-building" />
+          <div className="pixel-shop-sign">SEED &amp; PET SHOP</div>
         </div>
 
-        <div className="shop-wallet">
-          <span><CoinIcon /> <b>{shop.coins}</b></span>
-          <span><HeartIcon className="h-7 w-8" /> <b>{shop.lovePoints}</b></span>
+        <div className="shop-pixel-wallet">
+          <span>
+            <CoinIcon /> <b>{shop.coins}</b>
+          </span>
+          <span>
+            <HeartIcon /> <b>{shop.lovePoints}</b>
+          </span>
         </div>
 
-        <div className="shop-tabs">
-          {([
-            ["seed", "种子"],
-            ["pet", "宠物"],
-            ["decoration", "装饰"],
-            ["expand", "扩建"],
-          ] as [Category, string][]).map(([key, label]) => (
+        <div className="pixel-shop-window">
+          <div className="pixel-shopkeeper" aria-hidden="true" />
+          <p>欢迎光临！选好商品后会直接送到共同农场。</p>
+        </div>
+
+        <div className="pixel-shop-tabs">
+          {(
+            [
+              ["seed", "种子"],
+              ["pet", "宠物"],
+              ["decoration", "装饰"],
+              ["expand", "扩建"],
+            ] as [Category, string][]
+          ).map(([key, label]) => (
             <button
               key={key}
               className={category === key ? "active" : ""}
@@ -112,14 +120,19 @@ export default function ShopClient() {
           ))}
         </div>
 
-        <div className="shop-shelf">
+        <div className="pixel-shop-shelf">
           {category === "seed" &&
             shop.crops.map((item) => (
-              <article key={item.key} className="shelf-item seed-product">
-                <CropArt cropKey={item.key} stage="mid" className="product-art" />
+              <article key={item.key} className="pixel-product-card">
+                <SeedBagArt cropKey={item.key} className="pixel-product-art" />
+                <CropArt cropKey={item.key} stage="mature" className="pixel-product-crop" />
                 <b>{item.name}</b>
-                <small>{item.rarity} · 收获 {item.sellPrice}</small>
-                <span><CoinIcon /> {item.seedPrice}</span>
+                <small>
+                  {item.rarity} · 收获 {item.sellPrice}
+                </small>
+                <span>
+                  <CoinIcon /> {item.seedPrice}
+                </span>
                 <em>在农场空地购买</em>
               </article>
             ))}
@@ -129,15 +142,19 @@ export default function ShopClient() {
               const owned = shop.ownedPets.includes(item.key);
               const locked = shop.lovePoints < item.unlockLove;
               return (
-                <article key={item.key} className="shelf-item">
-                  <PetArt petKey={item.key} className="product-art pet" />
+                <article key={item.key} className="pixel-product-card">
+                  <PetArt petKey={item.key} className="pixel-product-pet" />
                   <b>{item.name}</b>
                   <small>{item.description}</small>
                   <button
                     disabled={owned || locked || Boolean(busy)}
                     onClick={() => buy("pet", item.key)}
                   >
-                    {owned ? "已拥有" : locked ? `需要 ${item.unlockLove} 爱心` : <><CoinIcon /> {item.price}</>}
+                    {owned
+                      ? "已拥有"
+                      : locked
+                        ? `需要 ${item.unlockLove} 爱心`
+                        : <><CoinIcon /> {item.price}</>}
                   </button>
                 </article>
               );
@@ -145,8 +162,8 @@ export default function ShopClient() {
 
           {category === "decoration" &&
             shop.decorations.map((item) => (
-              <article key={item.key} className="shelf-item">
-                <DecorationArt decorationKey={item.key} className="product-art decor" />
+              <article key={item.key} className="pixel-product-card">
+                <DecorationArt decorationKey={item.key} className="pixel-product-decoration" />
                 <b>{item.name}</b>
                 <small>农场已有 {shop.ownedDecorations[item.key] || 0} 个</small>
                 <button
@@ -159,17 +176,17 @@ export default function ShopClient() {
             ))}
 
           {category === "expand" && (
-            <div className="expand-counter">
-              <div className="expand-map-art">
-                <span />
-                <span />
-                <span />
-                <span />
+            <div className="pixel-expand-panel">
+              <div className="pixel-expand-plots">
+                <i />
+                <i />
+                <i />
+                <i />
               </div>
               {shop.expansion ? (
                 <>
                   <h2>扩建到 {shop.expansion.to} 块土地</h2>
-                  <p>村长会把右下角的新田区整理好。</p>
+                  <p>村长会为你整理一块新的农田。</p>
                   <button disabled={Boolean(busy)} onClick={() => buy("expand")}>
                     <CoinIcon /> {shop.expansion.price} · 开始扩建
                   </button>
@@ -183,7 +200,7 @@ export default function ShopClient() {
 
         {(error || message) && (
           <button
-            className={`game-toast ${error ? "error" : ""}`}
+            className={`pixel-toast ${error ? "error" : ""}`}
             onClick={() => {
               setError("");
               setMessage("");
