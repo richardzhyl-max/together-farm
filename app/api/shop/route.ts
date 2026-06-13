@@ -20,6 +20,7 @@ export async function GET() {
     return NextResponse.json({
       coins: farm.coins,
       lovePoints: farm.lovePoints,
+      activePetKey: farm.activePetKey,
       crops,
       pets,
       decorations,

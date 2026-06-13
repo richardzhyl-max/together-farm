@@ -610,18 +610,6 @@
 .pixel-nav-icon.shop { background-position: 100% 33.333%; }
 .pixel-nav-icon.mail { background-position: 100% 0; }
 
-.pixel-logout {
-  width: 34px;
-  height: 34px;
-  align-self: center;
-  border: 4px solid var(--pixel-dark);
-  background: #d95763;
-  color: white;
-  font-family: monospace;
-  font-weight: 1000;
-  box-shadow: inset -3px -3px #a6555f, inset 3px 3px #f68181;
-}
-
 /* RPG shop */
 .shop-scene,
 .message-scene {

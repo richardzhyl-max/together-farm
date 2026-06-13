@@ -25,6 +25,7 @@ model Farm {
   coins           Int              @default(500)
   lovePoints      Int              @default(0)
   plotCount       Int              @default(4)
+  activePetKey    String?
   autoWateredDate String?
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @updatedAt

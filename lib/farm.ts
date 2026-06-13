@@ -133,6 +133,7 @@ export async function farmSnapshot(userId: string) {
     coins: farm.coins,
     lovePoints: farm.lovePoints,
     plotCount: farm.plotCount,
+    activePetKey: farm.activePetKey,
     members: farm.members.map((row) => row.user),
     plots: farm.plots.map((plot) => ({
       ...plot,

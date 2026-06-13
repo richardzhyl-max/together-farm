@@ -32,6 +32,7 @@ type Shop = {
   pets: Item[];
   decorations: Item[];
   ownedPets: string[];
+  activePetKey: string | null;
   ownedDecorations: Record<string, number>;
   expansion: { to: number; price: number } | null;
 };
@@ -65,6 +66,22 @@ export default function ShopClient() {
     setBusy("");
     if (!response.ok) return setError(result.error);
     setMessage("老板已经把东西送到农场啦");
+    await load();
+    setTimeout(() => setMessage(""), 2200);
+  }
+
+  async function choosePet(key: string) {
+    setBusy(`active-pet:${key}`);
+    setError("");
+    const response = await fetch("/api/farm/pet/active", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ key }),
+    });
+    const result = await response.json();
+    setBusy("");
+    if (!response.ok) return setError(result.error);
+    setMessage("这只宠物已经到宠物窝门口啦");
     await load();
     setTimeout(() => setMessage(""), 2200);
   }
@@ -140,6 +157,7 @@ export default function ShopClient() {
           {category === "pet" &&
             shop.pets.map((item) => {
               const owned = shop.ownedPets.includes(item.key);
+              const active = shop.activePetKey === item.key;
               const locked = shop.lovePoints < item.unlockLove;
               return (
                 <article key={item.key} className="pixel-product-card">
@@ -147,11 +165,16 @@ export default function ShopClient() {
                   <b>{item.name}</b>
                   <small>{item.description}</small>
                   <button
-                    disabled={owned || locked || Boolean(busy)}
-                    onClick={() => buy("pet", item.key)}
+                    className={active ? "active-pet" : ""}
+                    disabled={active || locked || Boolean(busy)}
+                    onClick={() =>
+                      owned ? choosePet(item.key) : buy("pet", item.key)
+                    }
                   >
-                    {owned
-                      ? "已拥有"
+                    {active
+                      ? "出场中"
+                      : owned
+                        ? "设为出场"
                       : locked
                         ? `需要 ${item.unlockLove} 爱心`
                         : <><CoinIcon /> {item.price}</>}

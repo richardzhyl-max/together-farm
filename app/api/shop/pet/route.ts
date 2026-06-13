@@ -28,6 +28,12 @@ export async function POST(request: Request) {
       });
       if (!paid.count) throw new Error("金币不够");
       await tx.farmPet.create({ data: { farmId: farm.id, petKey: key } });
+      if (!farm.activePetKey) {
+        await tx.farm.update({
+          where: { id: farm.id },
+          data: { activePetKey: key },
+        });
+      }
       await tx.farmEventLog.create({ data: { farmId: farm.id, userId, type: "pet_purchased", payload: JSON.stringify({ key }) } });
     });
     emitFarmUpdate(farm.id);

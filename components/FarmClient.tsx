@@ -1,41 +1,24 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { io } from "socket.io-client";
-import {
-  BasketIcon,
-  CoinIcon,
-  CropArt,
-  DecorationArt,
-  EnvelopeIcon,
-  FarmHouse,
-  FenceArt,
-  HeartIcon,
-  PetArt,
-  SeedBagArt,
-  TreeArt,
-  WateringCan,
-} from "@/components/GameAssets";
-import Nav from "@/components/Nav";
+import FarmGameScene, {
+  type FarmScenePlot,
+} from "@/components/game/FarmGameScene";
+import FarmPlotDialog from "@/components/game/FarmPlotDialog";
+import type { CropVisualStage } from "@/lib/visual-layout";
 
 type Crop = {
   key: string;
   name: string;
-  emoji: string;
   rarity: string;
   seedPrice: number;
 };
 
-type Plot = {
-  id: string;
-  index: number;
-  state: "empty" | "growing" | "mature" | "withered";
+type Plot = FarmScenePlot & {
   crop: Crop | null;
-  plantedAt: string | null;
-  matureAt: string | null;
   witherAt: string | null;
-  growDurationSeconds: number | null;
-  waterBoostSeconds: number;
 };
 
 type Farm = {
@@ -45,10 +28,10 @@ type Farm = {
   coins: number;
   lovePoints: number;
   plotCount: number;
+  activePetKey: string | null;
   members: { id: string; username: string }[];
   plots: Plot[];
-  pets: { key: string; name: string; emoji: string; description: string }[];
-  decorations: { key: string; name: string; emoji: string; quantity: number }[];
+  pets: { key: string; name: string; description: string }[];
 };
 
 function formatRemaining(target: string | null, now: number) {
@@ -61,7 +44,7 @@ function formatRemaining(target: string | null, now: number) {
   return `${hours ? `${hours}时` : ""}${minutes}分${secs}秒`;
 }
 
-function stageFor(plot: Plot, now: number): "young" | "mid" | "mature" | "withered" {
+function stageFor(plot: FarmScenePlot, now: number): CropVisualStage {
   if (plot.state === "withered") return "withered";
   if (plot.state === "mature") return "mature";
   if (!plot.plantedAt || !plot.growDurationSeconds) return "young";
@@ -71,14 +54,8 @@ function stageFor(plot: Plot, now: number): "young" | "mid" | "mature" | "wither
   return progress < 0.36 ? "young" : progress < 0.76 ? "mid" : "mature";
 }
 
-function fieldColumns(count: number) {
-  if (count <= 4) return 2;
-  if (count <= 9) return 3;
-  if (count <= 16) return 4;
-  return 5;
-}
-
 export default function FarmClient() {
+  const router = useRouter();
   const [farm, setFarm] = useState<Farm | null>(null);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
@@ -138,224 +115,48 @@ export default function FarmClient() {
     setTimeout(() => setNotice(""), 2400);
   }
 
+  async function logout() {
+    await fetch("/api/auth/logout", { method: "POST" });
+    router.push("/login");
+    router.refresh();
+  }
+
   if (!farm) {
     return (
-      <main className="pixel-game-page">
-        <div className="pixel-loading">LOADING FARM...</div>
+      <main className="farm-visual-page">
+        <div className="farm-loading">正在读取共同农场...</div>
       </main>
     );
   }
 
-  const columns = fieldColumns(farm.plotCount);
-
   return (
-    <main className="pixel-game-page">
-      <div className="pixel-game-canvas farm-scene">
-        <div className="pixel-hud">
-          <div className="pixel-meter">
-            <CoinIcon />
-            <b>{farm.coins}</b>
-          </div>
-          <div className="pixel-meter">
-            <HeartIcon />
-            <b>{farm.lovePoints}</b>
-          </div>
-          <button
-            className="pixel-invite"
-            onClick={() =>
-              navigator.clipboard.writeText(farm.inviteCode).then(() => setNotice("邀请码已复制"))
-            }
-            aria-label={`复制邀请码 ${farm.inviteCode}`}
-          >
-            <EnvelopeIcon />
-            <span>{farm.inviteCode}</span>
-          </button>
-        </div>
-
-        <div className="pixel-farm-sign">
-          <strong>{farm.name}</strong>
-          <small>{farm.members.map((member) => member.username).join(" + ")}</small>
-        </div>
-
-        <div className="pixel-map">
-          <div className="pixel-path main-path" />
-          <div className="pixel-pond" />
-          <FarmHouse className="pixel-map-house" />
-          <TreeArt className="pixel-map-tree tree-a" />
-          <TreeArt className="pixel-map-tree tree-b" />
-          <TreeArt className="pixel-map-tree tree-c" />
-          <FenceArt className="pixel-map-fence fence-a" />
-          <FenceArt className="pixel-map-fence fence-b" />
-
-          <div
-            className={`pixel-fields cols-${columns}`}
-            style={{ "--field-cols": columns } as React.CSSProperties}
-          >
-            {farm.plots.map((plot) => (
-              <button
-                key={plot.id}
-                className={`pixel-plot ${plot.state}`}
-                onClick={() => setSelected(plot)}
-                aria-label={`${plot.crop?.name || "空地"} ${plot.state}`}
-              >
-                <span className="pixel-soil-lines" />
-                {plot.crop && (
-                  <CropArt
-                    cropKey={plot.crop.key}
-                    stage={stageFor(plot, now)}
-                    className="pixel-map-crop"
-                  />
-                )}
-                {plot.state === "mature" && (
-                  <span className="pixel-ready-marker">!</span>
-                )}
-                {plot.waterBoostSeconds > 0 && (
-                  <span className="pixel-water-particles">
-                    <i />
-                    <i />
-                    <i />
-                  </span>
-                )}
-              </button>
-            ))}
-          </div>
-
-          <div className="pixel-pet-zone">
-            {farm.pets.map((pet, index) => (
-              <div key={pet.key} className={`pixel-map-pet pet-${index % 4}`} title={pet.name}>
-                <PetArt petKey={pet.key} />
-                <span>{pet.name}</span>
-              </div>
-            ))}
-          </div>
-
-          <div className="pixel-decoration-zone">
-            {farm.decorations.flatMap((decoration) =>
-              Array.from({ length: Math.min(decoration.quantity, 3) }, (_, index) => (
-                <DecorationArt
-                  key={`${decoration.key}-${index}`}
-                  decorationKey={decoration.key}
-                  className={`pixel-map-decoration decor-${(decoration.key.length + index) % 6}`}
-                />
-              )),
-            )}
-          </div>
-        </div>
-
-        {(error || notice) && (
-          <button
-            className={`pixel-toast ${error ? "error" : ""}`}
-            onClick={() => {
-              setError("");
-              setNotice("");
-            }}
-          >
-            {error || notice}
-          </button>
-        )}
-
-        {selected && (
-          <div className="pixel-dialog-layer" onClick={() => setSelected(null)}>
-            <div className="pixel-dialog" onClick={(event) => event.stopPropagation()}>
-              <button className="pixel-dialog-close" onClick={() => setSelected(null)}>
-                X
-              </button>
-              <h2>{selected.state === "empty" ? "SELECT SEEDS" : selected.crop?.name}</h2>
-              {selected.state === "empty" ? (
-                <SeedBags plotId={selected.id} busy={busy} action={action} />
-              ) : (
-                <div className="pixel-plot-actions">
-                  <CropArt
-                    cropKey={selected.crop?.key}
-                    stage={stageFor(selected, now)}
-                    className="pixel-dialog-crop"
-                  />
-                  {selected.state === "growing" && (
-                    <>
-                      <p>距离成熟 {formatRemaining(selected.matureAt, now)}</p>
-                      <button
-                        disabled={Boolean(busy)}
-                        onClick={() =>
-                          action("/api/farm/water", { plotId: selected.id }, "浇水成功，情侣值 +1")
-                        }
-                      >
-                        <WateringCan />
-                        浇水加速
-                      </button>
-                    </>
-                  )}
-                  {selected.state === "mature" && (
-                    <button
-                      className="harvest"
-                      disabled={Boolean(busy)}
-                      onClick={() =>
-                        action("/api/farm/harvest", { plotId: selected.id }, "收获成功")
-                      }
-                    >
-                      <BasketIcon />
-                      收获作物
-                    </button>
-                  )}
-                  {selected.state === "withered" && (
-                    <>
-                      <p>作物已经枯萎，只能半价卖出</p>
-                      <button
-                        disabled={Boolean(busy)}
-                        onClick={() =>
-                          action("/api/farm/harvest", { plotId: selected.id }, "清理成功")
-                        }
-                      >
-                        <BasketIcon />
-                        清理土地
-                      </button>
-                    </>
-                  )}
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-      </div>
-      <Nav />
-    </main>
-  );
-}
-
-function SeedBags({
-  plotId,
-  busy,
-  action,
-}: {
-  plotId: string;
-  busy: string;
-  action: (path: string, body: object, success: string) => void;
-}) {
-  const [crops, setCrops] = useState<Crop[]>([]);
-
-  useEffect(() => {
-    fetch("/api/shop")
-      .then((response) => response.json())
-      .then((data) => data.crops && setCrops(data.crops));
-  }, []);
-
-  return (
-    <div className="pixel-seed-grid">
-      {crops.map((crop) => (
-        <button
-          key={crop.key}
-          className="pixel-seed-item"
-          disabled={Boolean(busy)}
-          onClick={() =>
-            action("/api/farm/plant", { plotId, cropKey: crop.key }, `种下了${crop.name}`)
-          }
-        >
-          <SeedBagArt cropKey={crop.key} />
-          <b>{crop.name}</b>
-          <span>
-            <CoinIcon /> {crop.seedPrice}
-          </span>
-        </button>
-      ))}
-    </div>
+    <FarmGameScene
+      farm={farm}
+      selectedPlotId={selected?.id || null}
+      notice={notice}
+      error={error}
+      stageForPlot={(plot) => stageFor(plot, now)}
+      onSelectPlot={(plot) => setSelected(plot as Plot)}
+      onCopyInvite={() =>
+        navigator.clipboard.writeText(farm.inviteCode).then(() => setNotice("邀请码已复制"))
+      }
+      onLogout={logout}
+      onDismissMessage={() => {
+        setError("");
+        setNotice("");
+      }}
+      dialog={
+        selected ? (
+          <FarmPlotDialog
+            plot={selected}
+            stage={stageFor(selected, now)}
+            remaining={formatRemaining(selected.matureAt, now)}
+            busy={busy}
+            action={action}
+            onClose={() => setSelected(null)}
+          />
+        ) : null
+      }
+    />
   );
 }

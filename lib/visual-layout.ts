@@ -1,0 +1,173 @@
+export type VisualRect = {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  zIndex?: number;
+};
+
+export type VisualAsset = {
+  src: string;
+  available: boolean;
+  description: string;
+};
+
+export type CropVisualStage = "young" | "mid" | "mature" | "withered";
+
+const asset = (src: string, description: string, available = false): VisualAsset => ({
+  src,
+  available,
+  description,
+});
+
+export const FARM_VISUAL_ASSETS = {
+  background: asset(
+    "/assets/game/backgrounds/farm-mobile.webp",
+    "完整 Q 版农场背景，860x1520，包含天空、草地、房屋、树木、小路、围栏、池塘和氛围装饰",
+    true,
+  ),
+  plots: {
+    empty: asset("/assets/game/plots/plot-empty.webp?v=4", "空闲土地", true),
+    growing: asset("/assets/game/plots/plot-growing.webp?v=4", "生长中土地", true),
+    mature: asset("/assets/game/plots/plot-mature.webp?v=4", "成熟土地", true),
+    withered: asset("/assets/game/plots/plot-withered.webp?v=4", "枯萎土地", true),
+    selected: asset("/assets/game/plots/plot-selected.webp?v=4", "土地选中高亮", true),
+  },
+  crops: {
+    radish: cropAssets("carrot", true),
+    wheat: cropAssets("wheat", true),
+    tomato: cropAssets("tomato", true),
+    strawberry: cropAssets("strawberry", true),
+    starflower: cropAssets("starflower", true),
+  },
+  seedBags: {
+    radish: asset("/assets/game/crops/carrot/seed-bag.webp", "萝卜种子袋", true),
+    wheat: asset("/assets/game/crops/wheat/seed-bag.webp", "小麦种子袋", true),
+    tomato: asset("/assets/game/crops/tomato/seed-bag.webp", "番茄种子袋", true),
+    strawberry: asset("/assets/game/crops/strawberry/seed-bag.webp", "草莓种子袋", true),
+    starflower: asset("/assets/game/crops/starflower/seed-bag.webp", "星星花种子袋", true),
+  },
+  pets: {
+    dog: asset("/assets/game/pets/dog-idle.webp", "小狗 Idle 动画或透明静态图", true),
+    cat: asset("/assets/game/pets/cat-idle.webp", "小猫 Idle 动画或透明静态图", true),
+    rabbit: asset("/assets/game/pets/rabbit-idle.webp", "小兔 Idle 动画或透明静态图", true),
+    fairy: asset("/assets/game/pets/fairy-idle.webp", "小精灵 Idle 动画或透明静态图", true),
+  },
+  hud: {
+    coinBar: asset("/assets/game/ui/hud/coin-bar.webp", "金币 HUD 槽", true),
+    loveBar: asset("/assets/game/ui/hud/love-bar.webp", "情侣值 HUD 槽", true),
+    farmSign: asset("/assets/game/ui/hud/farm-sign.webp", "农场名牌", true),
+    inviteButton: asset("/assets/game/ui/buttons/invite.webp", "邀请码信封按钮", true),
+    shopButton: asset("/assets/game/ui/buttons/shop.webp", "商城按钮", true),
+    messagesButton: asset("/assets/game/ui/buttons/messages.webp", "留言按钮", true),
+    logoutButton: asset("/assets/game/ui/buttons/logout.webp", "退出按钮", true),
+  },
+  dialog: {
+    panel: asset("/assets/game/ui/panels/plot-actions.webp", "土地操作面板", true),
+    seedCard: asset("/assets/game/ui/panels/seed-card.webp", "种子商品底板", true),
+    waterButton: asset("/assets/game/ui/buttons/water.webp", "浇水按钮", true),
+    harvestButton: asset("/assets/game/ui/buttons/harvest.webp", "收获按钮", true),
+    clearButton: asset("/assets/game/ui/buttons/clear.webp", "清理土地按钮", true),
+    closeButton: asset("/assets/game/ui/buttons/close.webp", "关闭按钮", true),
+  },
+} as const;
+
+function cropAssets(
+  folder: string,
+  available = false,
+): Record<CropVisualStage, VisualAsset> {
+  return {
+    young: asset(
+      `/assets/game/crops/${folder}/seedling.webp`,
+      `${folder} 幼苗`,
+      available,
+    ),
+    mid: asset(
+      `/assets/game/crops/${folder}/growing.webp`,
+      `${folder} 生长期`,
+      available,
+    ),
+    mature: asset(
+      `/assets/game/crops/${folder}/mature.webp`,
+      `${folder} 成熟期`,
+      available,
+    ),
+    withered: asset(
+      `/assets/game/crops/${folder}/withered.webp`,
+      `${folder} 枯萎期`,
+      available,
+    ),
+  };
+}
+
+export const FARM_VISUAL_LAYOUT = {
+  canvas: {
+    designWidth: 430,
+    designHeight: 760,
+    maxDesktopWidth: 860,
+  },
+  hud: {
+    coins: { x: 2.5, y: 2, width: 29, height: 6.4, zIndex: 50 },
+    love: { x: 34, y: 2, width: 29, height: 6.4, zIndex: 50 },
+    farmSign: { x: 31, y: 8.5, width: 38, height: 11, zIndex: 45 },
+    invite: { x: 77, y: 1.4, width: 14, height: 8, zIndex: 50 },
+    shop: { x: 64, y: 87, width: 14, height: 8, zIndex: 55 },
+    messages: { x: 80, y: 87, width: 14, height: 8, zIndex: 55 },
+    logout: { x: 92, y: 1.7, width: 7, height: 4, zIndex: 55 },
+  },
+  plots: {
+    centerX: 50,
+    centerY: 52,
+    maxColumns: 5,
+  },
+  petHome: { x: 78, y: 32.5, width: 14, height: 10.5, zIndex: 34 } satisfies VisualRect,
+  dialog: {
+    panel: { x: 5, y: 18, width: 90, height: 66, zIndex: 80 },
+  },
+} as const;
+
+export function farmPlotRect(index: number, total: number): VisualRect {
+  const config = FARM_VISUAL_LAYOUT.plots;
+  const size =
+    total <= 4
+      ? { width: 19, height: 12.5, columnGap: 2, rowGap: 1.5 }
+      : total <= 9
+        ? { width: 16, height: 10.5, columnGap: 1.5, rowGap: 1.3 }
+        : total <= 16
+          ? { width: 13.5, height: 9, columnGap: 1.2, rowGap: 1.2 }
+          : { width: 11.5, height: 7.7, columnGap: 1, rowGap: 1 };
+  const columns =
+    total <= 4 ? 2 : total <= 9 ? 3 : total <= 16 ? 4 : config.maxColumns;
+  const rows = Math.ceil(total / columns);
+  const row = Math.floor(index / columns);
+  const itemsInRow = Math.min(columns, total - row * columns);
+  const column = index % columns;
+  const rowWidth =
+    itemsInRow * size.width + Math.max(0, itemsInRow - 1) * size.columnGap;
+  const gridHeight =
+    rows * size.height + Math.max(0, rows - 1) * size.rowGap;
+
+  return {
+    x:
+      config.centerX -
+      rowWidth / 2 +
+      column * (size.width + size.columnGap),
+    y:
+      config.centerY -
+      gridHeight / 2 +
+      row * (size.height + size.rowGap),
+    width: size.width,
+    height: size.height,
+    zIndex: 20 + row,
+  };
+}
+
+export function visualRectStyle(rect: VisualRect) {
+  return {
+    left: `${rect.x}%`,
+    top: `${rect.y}%`,
+    width: `${rect.width}%`,
+    height: `${rect.height}%`,
+    zIndex: rect.zIndex,
+  };
+}

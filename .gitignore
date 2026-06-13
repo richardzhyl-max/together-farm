@@ -10,3 +10,5 @@ npm-debug.log*
 # Tiny Ranch permits game use but forbids redistributing the asset pack.
 # Keep the licensed source sheets and generated runtime images local.
 public/assets/tiny-ranch/
+tmp/
+work/
