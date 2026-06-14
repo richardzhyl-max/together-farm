@@ -34,6 +34,7 @@ Each crop folder needs:
 Required pets:
 
 - `pets/dog-idle.webp`
+- `pets/dog-idle-sprite.png` — 1536x1024, 2 rows x 4 columns, 8-frame idle loop
 - `pets/cat-idle.webp`
 - `pets/rabbit-idle.webp`
 - `pets/fairy-idle.webp`
@@ -42,6 +43,7 @@ Required HUD:
 
 - `ui/hud/coin-bar.webp`
 - `ui/hud/love-bar.webp`
+- `ui/hud/love-bond-sign.webp`
 - `ui/hud/farm-sign.webp`
 - `ui/buttons/invite.webp`
 - `ui/buttons/shop.webp`

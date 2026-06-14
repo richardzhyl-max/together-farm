@@ -336,13 +336,40 @@
 
 .farm-visual-pet {
   position: absolute;
-  animation: farmPetIdle 2.4s ease-in-out infinite;
+  animation: farmPetWalk 12s linear infinite;
   filter: drop-shadow(0 3px 2px rgba(47, 72, 30, .3));
   transform-origin: 50% 88%;
+  will-change: transform;
+}
+
+.farm-visual-pet > img {
+  animation: farmPetStep .48s ease-in-out infinite alternate;
+  transform-origin: 50% 88%;
+}
+
+.farm-visual-pet.has-sprite-animation {
+  animation: none;
+}
+
+.farm-pet-sprite {
+  position: absolute;
+  inset: 0;
+  background-image: var(--pet-sprite-image);
+  background-position: var(--pet-sprite-x) var(--pet-sprite-y);
+  background-repeat: no-repeat;
+  background-size:
+    calc(var(--pet-sprite-cols) * 100%)
+    calc(var(--pet-sprite-rows) * 100%);
 }
 
 .farm-visual-pet.pet-fairy {
   top: 30.5% !important;
+  animation-name: farmFairyPatrol;
+  animation-duration: 10s;
+}
+
+.farm-visual-pet.pet-fairy > img {
+  animation-duration: .85s;
 }
 
 .farm-hud-control {
@@ -364,8 +391,8 @@
   position: absolute;
   left: 31%;
   right: 17%;
-  top: 22%;
-  bottom: 17%;
+  top: 27%;
+  bottom: 12%;
   width: auto;
   margin: 0;
   display: flex;
@@ -387,6 +414,37 @@
 .farm-love-hud > span {
   color: #8b2942;
   text-shadow: 0 1px rgba(255, 240, 224, .9);
+}
+
+.farm-love-bond {
+  pointer-events: none;
+  position: absolute;
+  filter: drop-shadow(0 2px 2px rgba(52, 38, 19, .24));
+  transform: rotate(-6deg) skewX(-2deg);
+  transform-origin: 50% 50%;
+}
+
+.farm-love-bond > img {
+  object-fit: fill;
+}
+
+.farm-love-bond > strong {
+  position: absolute;
+  z-index: 2;
+  left: 50%;
+  top: 52%;
+  width: 68%;
+  overflow: hidden;
+  color: #76431f;
+  font-size: clamp(7px, 1.2vw, 11px);
+  font-weight: 900;
+  line-height: 1;
+  text-align: center;
+  text-overflow: ellipsis;
+  text-shadow: 0 1px rgba(255, 244, 184, .95);
+  transform: translate(-50%, -50%) rotate(-5deg) skewX(-7deg);
+  transform-origin: center;
+  white-space: nowrap;
 }
 
 .farm-name-control > span {
@@ -861,9 +919,81 @@
   font-size: clamp(11px, 2.5vw, 17px);
 }
 
-@keyframes farmPetIdle {
-  0%, 100% { transform: translateY(0) scale(1); }
-  50% { transform: translateY(-4%) scale(1.025, .985); }
+@keyframes farmPetWalk {
+  0%, 8% {
+    transform: translate3d(0, 0, 0) scaleX(-1);
+  }
+  13% {
+    transform: translate3d(-18%, -1.5%, 0) scaleX(-1);
+  }
+  19% {
+    transform: translate3d(-38%, 0, 0) scaleX(-1);
+  }
+  25% {
+    transform: translate3d(-58%, -1.5%, 0) scaleX(-1);
+  }
+  31% {
+    transform: translate3d(-78%, 0, 0) scaleX(-1);
+  }
+  37% {
+    transform: translate3d(-98%, -1.5%, 0) scaleX(-1);
+  }
+  43%, 49% {
+    transform: translate3d(-118%, 0, 0) scaleX(-1);
+  }
+  50%, 56% {
+    transform: translate3d(-118%, 0, 0) scaleX(1);
+  }
+  61% {
+    transform: translate3d(-98%, -1.5%, 0) scaleX(1);
+  }
+  67% {
+    transform: translate3d(-78%, 0, 0) scaleX(1);
+  }
+  73% {
+    transform: translate3d(-58%, -1.5%, 0) scaleX(1);
+  }
+  79% {
+    transform: translate3d(-38%, 0, 0) scaleX(1);
+  }
+  85% {
+    transform: translate3d(-18%, -1.5%, 0) scaleX(1);
+  }
+  91%, 97% {
+    transform: translate3d(0, 0, 0) scaleX(1);
+  }
+  98%, 100% {
+    transform: translate3d(0, 0, 0) scaleX(-1);
+  }
+}
+
+@keyframes farmFairyPatrol {
+  0%, 10% {
+    transform: translate3d(0, 0, 0) scaleX(1);
+  }
+  25% {
+    transform: translate3d(-45%, -5%, 0) scaleX(1);
+  }
+  43%, 49% {
+    transform: translate3d(-95%, 2%, 0) scaleX(1);
+  }
+  50%, 57% {
+    transform: translate3d(-95%, 2%, 0) scaleX(-1);
+  }
+  73% {
+    transform: translate3d(-45%, -5%, 0) scaleX(-1);
+  }
+  90%, 97% {
+    transform: translate3d(0, 0, 0) scaleX(-1);
+  }
+  98%, 100% {
+    transform: translate3d(0, 0, 0) scaleX(1);
+  }
+}
+
+@keyframes farmPetStep {
+  from { transform: translateY(0) rotate(-1.2deg) scale(1.01, .99); }
+  to { transform: translateY(-1.5%) rotate(1.2deg) scale(.99, 1.01); }
 }
 
 @keyframes farmTreeSway {
@@ -950,6 +1080,8 @@
   .farm-waterwheel-flow::after,
   .farm-pond-ripple,
   .farm-chimney-smoke,
+  .farm-visual-pet,
+  .farm-visual-pet > img,
   .farm-visual-plot.state-mature .farm-crop-visual,
   .farm-visual-plot.state-mature .farm-crop-visual::after {
     animation: none;

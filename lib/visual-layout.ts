@@ -12,6 +12,14 @@ export type VisualAsset = {
   description: string;
 };
 
+export type PetAnimationConfig = {
+  spriteSheet: string;
+  rows: number;
+  cols: number;
+  frameCount: number;
+  frameDuration: number;
+};
+
 export type CropVisualStage = "young" | "mid" | "mature" | "withered";
 
 const asset = (src: string, description: string, available = false): VisualAsset => ({
@@ -61,6 +69,11 @@ export const FARM_VISUAL_ASSETS = {
   hud: {
     coinBar: asset("/assets/game/ui/hud/coin-bar.webp", "金币 HUD 槽", true),
     loveBar: asset("/assets/game/ui/hud/love-bar.webp", "情侣值 HUD 槽", true),
+    loveBondSign: asset(
+      "/assets/game/ui/hud/love-bond-sign.webp",
+      "左下牌匾附属的情侣羁绊等级牌",
+      true,
+    ),
     farmSign: asset("/assets/game/ui/hud/farm-sign.webp", "农场名牌", true),
     inviteButton: asset("/assets/game/ui/buttons/invite.webp", "邀请码信封按钮", true),
     shopButton: asset("/assets/game/ui/buttons/shop.webp", "商城按钮", true),
@@ -76,6 +89,18 @@ export const FARM_VISUAL_ASSETS = {
     closeButton: asset("/assets/game/ui/buttons/close.webp", "关闭按钮", true),
   },
 } as const;
+
+export const PET_ANIMATION_CONFIGS: Partial<
+  Record<keyof typeof FARM_VISUAL_ASSETS.pets, PetAnimationConfig>
+> = {
+  dog: {
+    spriteSheet: "/assets/game/pets/dog-idle-sprite.png",
+    rows: 2,
+    cols: 4,
+    frameCount: 8,
+    frameDuration: 150,
+  },
+};
 
 function cropAssets(
   folder: string,
@@ -114,6 +139,7 @@ export const FARM_VISUAL_LAYOUT = {
   hud: {
     coins: { x: 2.5, y: 2, width: 29, height: 6.4, zIndex: 50 },
     love: { x: 34, y: 2, width: 29, height: 6.4, zIndex: 50 },
+    loveBond: { x: 5.4, y: 86, width: 18.5, height: 6.2, zIndex: 42 },
     farmSign: { x: 31, y: 8.5, width: 38, height: 11, zIndex: 45 },
     invite: { x: 77, y: 1.4, width: 14, height: 8, zIndex: 50 },
     harvestAll: { x: 34, y: 77.5, width: 32, height: 5.8, zIndex: 55 },
@@ -140,7 +166,7 @@ export function farmPlotRect(index: number, total: number): VisualRect {
       : total <= 9
         ? { width: 17, height: 11.2, columnGap: 1.5, rowGap: 1.4, centerY: 54.5 }
         : total <= 16
-          ? { width: 13.2, height: 8.8, columnGap: 1, rowGap: 1.2, centerY: 54 }
+          ? { width: 15.4, height: 12.4, columnGap: -.4, rowGap: -2.8, centerY: 54 }
           : { width: 11, height: 7.35, columnGap: .8, rowGap: 1, centerY: 54 };
   const columns =
     total <= 4 ? 2 : total <= 9 ? 3 : total <= 16 ? 4 : config.maxColumns;

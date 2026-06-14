@@ -2,13 +2,16 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import type { ReactNode } from "react";
+import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
+import { loveBondFor } from "@/lib/love-bond";
 import {
   FARM_VISUAL_ASSETS,
   FARM_VISUAL_CONFIG,
   FARM_VISUAL_LAYOUT,
+  PET_ANIMATION_CONFIGS,
   farmPlotRect,
   type CropVisualStage,
+  type PetAnimationConfig,
   type VisualAsset,
   visualRectStyle,
 } from "@/lib/visual-layout";
@@ -75,6 +78,7 @@ export default function FarmGameScene({
   dialog,
 }: Props) {
   const matureCount = farm.plots.filter((plot) => plot.state === "mature").length;
+  const loveBond = loveBondFor(farm.lovePoints);
 
   return (
     <main className="farm-visual-page">
@@ -130,13 +134,23 @@ export default function FarmGameScene({
               FARM_VISUAL_ASSETS.pets[
                 activePet.key as keyof typeof FARM_VISUAL_ASSETS.pets
               ];
+            const animation =
+              PET_ANIMATION_CONFIGS[
+                activePet.key as keyof typeof PET_ANIMATION_CONFIGS
+              ];
             return (
               <div
-                className={`farm-visual-pet pet-${activePet.key}`}
+                className={`farm-visual-pet pet-${activePet.key} ${
+                  animation ? "has-sprite-animation" : ""
+                }`}
                 style={visualRectStyle(FARM_VISUAL_LAYOUT.petHome)}
                 title={`${activePet.name}正在宠物窝门口玩耍`}
               >
-                <SceneAsset asset={petAsset} label={`${activePet.name}素材`} fill />
+                <PetVisual
+                  asset={petAsset}
+                  animation={animation}
+                  label={`${activePet.name}素材`}
+                />
               </div>
             );
           })()}
@@ -154,9 +168,14 @@ export default function FarmGameScene({
             asset={FARM_VISUAL_ASSETS.hud.loveBar}
             rect={FARM_VISUAL_LAYOUT.hud.love}
             label="情侣值"
-            value={farm.lovePoints}
+            value={
+              loveBond.next
+                ? `${farm.lovePoints} / ${loveBond.next.requiredLovePoints}`
+                : `${farm.lovePoints} 满级`
+            }
             className="farm-love-hud"
           />
+          <LoveBondHud bond={loveBond} />
           <div
             className="farm-hud-control farm-name-control"
             style={visualRectStyle(FARM_VISUAL_LAYOUT.hud.farmSign)}
@@ -244,6 +263,94 @@ export default function FarmGameScene({
   );
 }
 
+function PetVisual({
+  asset,
+  animation,
+  label,
+}: {
+  asset: VisualAsset | undefined;
+  animation?: PetAnimationConfig;
+  label: string;
+}) {
+  const [spriteStatus, setSpriteStatus] = useState<
+    "loading" | "ready" | "failed"
+  >(animation ? "loading" : "failed");
+  const [frame, setFrame] = useState(0);
+
+  useEffect(() => {
+    if (!animation) {
+      setSpriteStatus("failed");
+      return;
+    }
+
+    let active = true;
+    const sprite = new window.Image();
+    sprite.onload = () => {
+      if (active) setSpriteStatus("ready");
+    };
+    sprite.onerror = () => {
+      if (active) setSpriteStatus("failed");
+    };
+    sprite.src = animation.spriteSheet;
+
+    return () => {
+      active = false;
+    };
+  }, [animation]);
+
+  useEffect(() => {
+    if (!animation || spriteStatus !== "ready") return;
+    const timer = window.setInterval(() => {
+      setFrame((current) => (current + 1) % animation.frameCount);
+    }, animation.frameDuration);
+    return () => window.clearInterval(timer);
+  }, [animation, spriteStatus]);
+
+  if (!animation || spriteStatus !== "ready") {
+    return <SceneAsset asset={asset} label={label} fill />;
+  }
+
+  const column = frame % animation.cols;
+  const row = Math.floor(frame / animation.cols) % animation.rows;
+  const x = animation.cols > 1 ? (column / (animation.cols - 1)) * 100 : 0;
+  const y = animation.rows > 1 ? (row / (animation.rows - 1)) * 100 : 0;
+  const style = {
+    "--pet-sprite-image": `url("${animation.spriteSheet}")`,
+    "--pet-sprite-cols": animation.cols,
+    "--pet-sprite-rows": animation.rows,
+    "--pet-sprite-x": `${x}%`,
+    "--pet-sprite-y": `${y}%`,
+  } as CSSProperties;
+
+  return <span className="farm-pet-sprite" style={style} aria-hidden="true" />;
+}
+
+function LoveBondHud({
+  bond,
+}: {
+  bond: ReturnType<typeof loveBondFor>;
+}) {
+  const nextLabel = bond.next
+    ? `距 Lv${bond.next.level} ${bond.next.name} 还差 ${bond.pointsToNextLevel}`
+    : "最高羁绊 · 永远相伴";
+
+  return (
+    <div
+      className="farm-love-bond"
+      style={visualRectStyle(FARM_VISUAL_LAYOUT.hud.loveBond)}
+      aria-label={`情侣羁绊 Lv${bond.level} ${bond.name}，${nextLabel}`}
+      title={nextLabel}
+    >
+      <SceneAsset
+        asset={FARM_VISUAL_ASSETS.hud.loveBondSign}
+        label="情侣羁绊等级牌素材"
+        fill
+      />
+      <strong>Lv{bond.level} {bond.name}</strong>
+    </div>
+  );
+}
+
 function BackgroundLayer() {
   const background = FARM_VISUAL_ASSETS.background;
   return (
@@ -293,7 +400,7 @@ function HudValue({
   asset: VisualAsset;
   rect: Parameters<typeof visualRectStyle>[0];
   label: string;
-  value: number;
+  value: ReactNode;
   className?: string;
 }) {
   return (
