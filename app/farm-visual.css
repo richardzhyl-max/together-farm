@@ -48,6 +48,187 @@
   object-fit: cover;
 }
 
+.farm-scene-motion {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.farm-tree-canopy,
+.farm-flora {
+  position: absolute;
+  background-image: url("/assets/game/backgrounds/farm-mobile.webp");
+  background-repeat: no-repeat;
+  will-change: transform;
+}
+
+.farm-tree-canopy {
+  left: 69%;
+  top: 9.4%;
+  width: 30.5%;
+  height: 21.6%;
+  background-size: 327.87% 462.96%;
+  background-position: 99.28% 11.99%;
+  clip-path: polygon(23% 4%, 49% 0, 73% 5%, 100% 19%, 100% 88%, 78% 92%, 61% 78%, 43% 83%, 27% 70%, 10% 56%, 13% 25%);
+  transform-origin: 68% 88%;
+  animation: farmTreeSway 4.8s ease-in-out infinite alternate;
+}
+
+.farm-flora {
+  transform-origin: 50% 100%;
+  animation: farmFloraSway 4.8s ease-in-out infinite alternate;
+}
+
+.farm-flora-house {
+  left: .5%;
+  top: 24.5%;
+  width: 37%;
+  height: 9.5%;
+  background-size: 270.27% 1052.63%;
+  background-position: .5% 27.07%;
+  clip-path: polygon(0 46%, 22% 38%, 34% 55%, 52% 28%, 68% 48%, 84% 22%, 100% 48%, 100% 100%, 0 100%);
+  animation-delay: -1.3s;
+}
+
+.farm-flora-wheel {
+  left: 0;
+  top: 53.5%;
+  width: 24%;
+  height: 13%;
+  background-size: 416.67% 769.23%;
+  background-position: 0 61.49%;
+  clip-path: polygon(0 54%, 18% 42%, 34% 58%, 49% 38%, 66% 56%, 82% 34%, 100% 50%, 100% 100%, 0 100%);
+  animation-duration: 6.1s;
+  animation-delay: -3.7s;
+}
+
+.farm-flora-bottom-left,
+.farm-flora-bottom-right {
+  top: 87.5%;
+  height: 12.5%;
+  background-position-y: 100%;
+  animation: farmTreeSway 4.8s ease-in-out infinite alternate;
+}
+
+.farm-flora-bottom-left {
+  left: 0;
+  top: 93%;
+  width: 13%;
+  height: 7%;
+  background-size: 769.23% 1428.57%;
+  background-position-x: 0;
+  clip-path: polygon(0 0, 22% 17%, 39% 4%, 57% 22%, 72% 8%, 88% 27%, 100% 20%, 100% 100%, 0 100%);
+  transform-origin: 10% 100%;
+  animation-delay: -1.4s;
+}
+
+.farm-flora-bottom-right {
+  right: 0;
+  width: 24%;
+  background-size: 416.67% 800%;
+  background-position-x: 100%;
+  clip-path: polygon(0 55%, 16% 31%, 31% 38%, 45% 12%, 60% 28%, 75% 4%, 88% 18%, 100% 7%, 100% 100%, 0 100%);
+  transform-origin: 82% 100%;
+  animation-delay: -3.2s;
+}
+
+.farm-waterwheel-flow {
+  position: absolute;
+  left: 10.15%;
+  top: 56.55%;
+  width: 2.7%;
+  height: 3.25%;
+  border-radius: 38% 42% 48% 52%;
+  background:
+    linear-gradient(
+      90deg,
+      rgba(58, 178, 235, .25),
+      rgba(224, 251, 255, .9) 42%,
+      rgba(94, 209, 252, .72) 68%,
+      rgba(40, 157, 224, .18)
+    );
+  clip-path: polygon(22% 0, 78% 0, 100% 82%, 72% 100%, 20% 88%, 0 28%);
+  mix-blend-mode: screen;
+  filter: drop-shadow(0 1px 1px rgba(38, 157, 222, .65));
+  transform-origin: 50% 0;
+  animation: farmWaterwheelFlow .95s ease-in-out infinite alternate;
+  will-change: transform, opacity;
+}
+
+.farm-waterwheel-flow::before {
+  content: "";
+  position: absolute;
+  inset: -35% 18%;
+  background: linear-gradient(
+    180deg,
+    transparent 0 14%,
+    rgba(255, 255, 255, .82) 18% 27%,
+    transparent 32% 55%,
+    rgba(225, 251, 255, .72) 60% 69%,
+    transparent 74%
+  );
+  animation: farmWaterwheelHighlights .65s linear infinite;
+}
+
+.farm-waterwheel-flow::after {
+  content: "";
+  position: absolute;
+  left: -105%;
+  bottom: -13%;
+  width: 310%;
+  height: 24%;
+  border: 2px solid rgba(218, 250, 255, .78);
+  border-top-color: rgba(255, 255, 255, .94);
+  border-radius: 50%;
+  opacity: .72;
+  animation: farmWaterwheelSplash 1.2s ease-out infinite;
+}
+
+.farm-pond-ripple {
+  position: absolute;
+  width: 13%;
+  aspect-ratio: 2.4 / 1;
+  border: 3px solid rgba(225, 254, 255, .9);
+  border-radius: 50%;
+  opacity: 0;
+  filter: drop-shadow(0 0 3px rgba(72, 200, 255, .8));
+  animation: farmPondRipple 3.9s ease-out infinite;
+}
+
+.farm-pond-ripple-bridge {
+  left: 75%;
+  top: 79.5%;
+}
+
+.farm-pond-ripple-duck {
+  left: 58%;
+  top: 84.5%;
+  width: 10%;
+  animation-delay: -2.6s;
+}
+
+.farm-chimney-smoke {
+  position: absolute;
+  left: 12.5%;
+  top: 13.3%;
+  width: 4.8%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, .86);
+  filter: blur(1.5px);
+  opacity: 0;
+  animation: farmChimneySmoke 5.2s ease-out infinite;
+}
+
+.farm-chimney-smoke-two {
+  animation-delay: -2s;
+}
+
+.farm-chimney-smoke-three {
+  animation-delay: -4s;
+}
+
 .farm-background-required {
   position: absolute;
   inset: 0;
@@ -131,6 +312,26 @@
   right: 25%;
   top: -18%;
   bottom: 8%;
+}
+
+.farm-visual-plot.state-mature .farm-crop-visual {
+  transform-origin: 50% 92%;
+  animation: farmMatureCropSway 4.6s ease-in-out infinite alternate;
+}
+
+.farm-visual-plot.state-mature .farm-crop-visual::after {
+  content: "";
+  position: absolute;
+  left: 56%;
+  top: 18%;
+  width: 28%;
+  aspect-ratio: 1;
+  background:
+    linear-gradient(45deg, transparent 42%, rgba(255, 252, 193, .95) 48% 52%, transparent 58%),
+    linear-gradient(-45deg, transparent 42%, rgba(255, 252, 193, .95) 48% 52%, transparent 58%);
+  filter: drop-shadow(0 0 3px rgba(255, 218, 72, .9));
+  opacity: 0;
+  animation: farmHarvestSparkle 6.2s ease-in-out infinite;
 }
 
 .farm-visual-pet {
@@ -460,11 +661,32 @@
 .farm-plot-dialog h2 {
   position: relative;
   z-index: 3;
-  margin: 0 0 12px;
+  width: fit-content;
+  max-width: 72%;
+  margin: 0 auto 16px;
+  overflow: hidden;
+  border: 2px solid #9b5b20;
+  border-radius: 999px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, .68), transparent 42%),
+    linear-gradient(180deg, #fff3be 0%, #f4cf79 100%);
+  box-shadow:
+    inset 0 0 0 2px rgba(255, 250, 213, .88),
+    inset 0 -3px 0 rgba(157, 82, 22, .2),
+    0 3px 0 #6f3517,
+    0 6px 10px rgba(80, 42, 17, .28);
+  padding: 5px 22px 6px;
   color: #70401c;
   font-size: clamp(16px, 3.8vw, 28px);
-  text-shadow: 0 1px rgba(255, 248, 211, .95);
+  font-weight: 900;
+  line-height: 1.15;
+  letter-spacing: .08em;
+  text-overflow: ellipsis;
+  text-shadow:
+    0 1px rgba(255, 248, 211, .95),
+    0 2px 2px rgba(111, 53, 23, .16);
   text-align: center;
+  white-space: nowrap;
 }
 
 .farm-dialog-close {
@@ -644,6 +866,56 @@
   50% { transform: translateY(-4%) scale(1.025, .985); }
 }
 
+@keyframes farmTreeSway {
+  from { transform: rotate(-2deg) translateX(-.7%) scaleX(.99); }
+  to { transform: rotate(2.25deg) translateX(.8%) scaleX(1.014); }
+}
+
+@keyframes farmFloraSway {
+  from { transform: skewX(-1.1deg) rotate(-.7deg) scaleY(.995); }
+  to { transform: skewX(1.3deg) rotate(.8deg) scaleY(1.012); }
+}
+
+@keyframes farmWaterwheelFlow {
+  from { transform: skewX(-1.5deg) scaleY(.94); opacity: .72; }
+  to { transform: skewX(1.5deg) scaleY(1.06); opacity: .96; }
+}
+
+@keyframes farmWaterwheelHighlights {
+  from { transform: translateY(-24%); }
+  to { transform: translateY(34%); }
+}
+
+@keyframes farmWaterwheelSplash {
+  0%, 18% { transform: scale(.45); opacity: 0; }
+  36% { opacity: .78; }
+  100% { transform: scale(1.12); opacity: 0; }
+}
+
+@keyframes farmPondRipple {
+  0%, 30% { transform: scale(.25); opacity: 0; }
+  38% { opacity: .92; }
+  82%, 100% { transform: scale(1.65); opacity: 0; }
+}
+
+@keyframes farmMatureCropSway {
+  from { transform: rotate(-2.7deg) translateX(-1%) translateY(.4%); }
+  to { transform: rotate(2.9deg) translateX(1%) translateY(-1.2%); }
+}
+
+@keyframes farmHarvestSparkle {
+  0%, 68%, 100% { transform: scale(.35) rotate(0); opacity: 0; }
+  73% { transform: scale(1.45) rotate(12deg); opacity: 1; }
+  80% { transform: scale(.55) rotate(24deg); opacity: 0; }
+}
+
+@keyframes farmChimneySmoke {
+  0% { transform: translate3d(0, 0, 0) scale(.45); opacity: 0; }
+  14% { opacity: .82; }
+  62% { opacity: .48; }
+  100% { transform: translate3d(95%, -285%, 0) scale(1.55); opacity: 0; }
+}
+
 @keyframes farmHarvestReady {
   0%, 100% { transform: translateY(0) scale(1); }
   50% { transform: translateY(-8%) scale(1.04); }
@@ -668,4 +940,18 @@
 @keyframes farmToastFloat {
   0%, 100% { transform: translate(-50%, 0); }
   50% { transform: translate(-50%, -3px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .farm-tree-canopy,
+  .farm-flora,
+  .farm-waterwheel-flow,
+  .farm-waterwheel-flow::before,
+  .farm-waterwheel-flow::after,
+  .farm-pond-ripple,
+  .farm-chimney-smoke,
+  .farm-visual-plot.state-mature .farm-crop-visual,
+  .farm-visual-plot.state-mature .farm-crop-visual::after {
+    animation: none;
+  }
 }

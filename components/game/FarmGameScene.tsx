@@ -264,6 +264,21 @@ function BackgroundLayer() {
           <small>TODO: 放入合格素材后，将 lib/visual-layout.ts 中 available 改为 true。</small>
         </div>
       )}
+      {background.available && (
+        <div className="farm-scene-motion" aria-hidden="true">
+          <span className="farm-tree-canopy" />
+          <span className="farm-flora farm-flora-house" />
+          <span className="farm-flora farm-flora-wheel" />
+          <span className="farm-flora farm-flora-bottom-left" />
+          <span className="farm-flora farm-flora-bottom-right" />
+          <span className="farm-waterwheel-flow" />
+          <span className="farm-pond-ripple farm-pond-ripple-bridge" />
+          <span className="farm-pond-ripple farm-pond-ripple-duck" />
+          <span className="farm-chimney-smoke farm-chimney-smoke-one" />
+          <span className="farm-chimney-smoke farm-chimney-smoke-two" />
+          <span className="farm-chimney-smoke farm-chimney-smoke-three" />
+        </div>
+      )}
     </section>
   );
 }
