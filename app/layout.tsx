@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 import "./pixel.css";
 import "./farm-visual.css";
+import "./shop-visual.css";
+import "./messages-visual.css";
 
 export const metadata: Metadata = {
   title: "两个人的农场",

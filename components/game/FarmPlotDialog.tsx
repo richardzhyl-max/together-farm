@@ -29,7 +29,7 @@ export default function FarmPlotDialog({
   return (
     <div className="farm-dialog-backdrop" onClick={onClose}>
       <div
-        className="farm-plot-dialog"
+        className={`farm-plot-dialog state-${plot.state}`}
         style={visualRectStyle(FARM_VISUAL_LAYOUT.dialog.panel)}
         onClick={(event) => event.stopPropagation()}
       >
@@ -66,7 +66,7 @@ export default function FarmPlotDialog({
             )}
             {plot.state === "growing" && (
               <>
-                <p>距离成熟 {remaining}</p>
+                <p className="farm-dialog-status">距离成熟 {remaining}</p>
                 <ActionButton
                   asset={FARM_VISUAL_ASSETS.dialog.waterButton}
                   label="浇水加速"
@@ -85,7 +85,7 @@ export default function FarmPlotDialog({
             )}
             {plot.state === "withered" && (
               <>
-                <p>作物已经枯萎，只能半价卖出</p>
+                <p className="farm-dialog-status">作物已经枯萎，只能半价卖出</p>
                 <ActionButton
                   asset={FARM_VISUAL_ASSETS.dialog.clearButton}
                   label="清理土地"

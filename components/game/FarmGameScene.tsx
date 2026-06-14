@@ -5,6 +5,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import {
   FARM_VISUAL_ASSETS,
+  FARM_VISUAL_CONFIG,
   FARM_VISUAL_LAYOUT,
   farmPlotRect,
   type CropVisualStage,
@@ -52,6 +53,8 @@ type Props = {
   stageForPlot: (plot: FarmScenePlot) => CropVisualStage;
   onSelectPlot: (plot: FarmScenePlot) => void;
   onCopyInvite: () => void;
+  onHarvestAll: () => void;
+  harvestAllBusy: boolean;
   onLogout: () => void;
   onDismissMessage: () => void;
   dialog: ReactNode;
@@ -65,10 +68,14 @@ export default function FarmGameScene({
   stageForPlot,
   onSelectPlot,
   onCopyInvite,
+  onHarvestAll,
+  harvestAllBusy,
   onLogout,
   onDismissMessage,
   dialog,
 }: Props) {
+  const matureCount = farm.plots.filter((plot) => plot.state === "mature").length;
+
   return (
     <main className="farm-visual-page">
       <div className="farm-game-scene">
@@ -77,9 +84,8 @@ export default function FarmGameScene({
         <section className="farm-layer farm-land-layer" aria-label="土地与作物层">
           {farm.plots.map((plot, index) => {
             const rect = farmPlotRect(index, farm.plots.length);
-            // Keep every plot on the exact same base silhouette. State
-            // differences are visual overlays so the perspective never jumps.
             const plotAsset = FARM_VISUAL_ASSETS.plots.empty;
+            const isSelected = selectedPlotId === plot.id;
             const cropAsset = plot.crop
               ? FARM_VISUAL_ASSETS.crops[
                   plot.crop.key as keyof typeof FARM_VISUAL_ASSETS.crops
@@ -89,17 +95,24 @@ export default function FarmGameScene({
             return (
               <button
                 key={plot.id}
-                className={`farm-visual-plot state-${plot.state} ${
-                  selectedPlotId === plot.id ? "selected" : ""
-                }`}
+                className={`farm-visual-plot state-${plot.state} ${isSelected ? "selected" : ""}`}
                 style={visualRectStyle(rect)}
                 onClick={() => onSelectPlot(plot)}
                 aria-label={`${plot.crop?.name || "空地"} ${plot.state}`}
               >
                 <SceneAsset asset={plotAsset} label={`${plot.index + 1}号土地`} fill />
-                {cropAsset && (
+                {!FARM_VISUAL_CONFIG.usePlotStateImageOnly && cropAsset && (
                   <span className="farm-crop-visual">
                     <SceneAsset asset={cropAsset} label={`${plot.crop?.name}素材`} fill />
+                  </span>
+                )}
+                {isSelected && (
+                  <span className="farm-plot-selected-layer" aria-hidden="true">
+                    <SceneAsset
+                      asset={FARM_VISUAL_ASSETS.plots.selected}
+                      label="土地选中高亮"
+                      fill
+                    />
                   </span>
                 )}
                 {plot.state === "mature" && <span className="farm-mature-status">可收获</span>}
@@ -166,6 +179,27 @@ export default function FarmGameScene({
             />
             <span>{farm.inviteCode}</span>
           </button>
+          {matureCount > 0 && (
+            <button
+              className="farm-hud-control farm-harvest-all-control"
+              style={visualRectStyle(FARM_VISUAL_LAYOUT.hud.harvestAll)}
+              onClick={onHarvestAll}
+              disabled={harvestAllBusy}
+              aria-label={`一键收获，${matureCount} 块成熟土地`}
+            >
+              <span className="farm-harvest-all-icon">
+                <SceneAsset
+                  asset={FARM_VISUAL_ASSETS.dialog.harvestButton}
+                  label="一键收获按钮素材"
+                  fill
+                />
+              </span>
+              <span className="farm-harvest-all-label">
+                {harvestAllBusy ? "收获中" : "一键收获"}
+              </span>
+              <span className="farm-harvest-all-count">{matureCount}</span>
+            </button>
+          )}
           <Link
             className="farm-hud-control farm-nav-control"
             style={visualRectStyle(FARM_VISUAL_LAYOUT.hud.shop)}

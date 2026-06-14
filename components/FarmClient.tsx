@@ -115,6 +115,24 @@ export default function FarmClient() {
     setTimeout(() => setNotice(""), 2400);
   }
 
+  async function harvestAll() {
+    const path = "/api/farm/harvest-all";
+    setBusy(path);
+    setError("");
+    const response = await fetch(path, { method: "POST" });
+    const result = await response.json();
+    setBusy("");
+    if (!response.ok) return setError(result.error);
+    setNotice(
+      result.harvested > 0
+        ? `一键收获 ${result.harvested} 块土地，获得 ${result.earned} 金币`
+        : "暂时没有成熟作物",
+    );
+    setSelected(null);
+    await load();
+    setTimeout(() => setNotice(""), 2400);
+  }
+
   async function logout() {
     await fetch("/api/auth/logout", { method: "POST" });
     router.push("/login");
@@ -140,6 +158,8 @@ export default function FarmClient() {
       onCopyInvite={() =>
         navigator.clipboard.writeText(farm.inviteCode).then(() => setNotice("邀请码已复制"))
       }
+      onHarvestAll={harvestAll}
+      harvestAllBusy={busy === "/api/farm/harvest-all"}
       onLogout={logout}
       onDismissMessage={() => {
         setError("");

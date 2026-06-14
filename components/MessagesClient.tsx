@@ -1,9 +1,11 @@
 "use client";
 
+import Image from "next/image";
+import Link from "next/link";
 import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import { io } from "socket.io-client";
-import { EnvelopeIcon, FarmHouse, TreeArt } from "@/components/GameAssets";
-import Nav from "@/components/Nav";
+import { SceneAsset } from "@/components/game/FarmGameScene";
+import { FARM_VISUAL_ASSETS } from "@/lib/visual-layout";
 
 type Message = {
   id: string;
@@ -17,7 +19,7 @@ export default function MessagesClient({ userId }: { userId: string }) {
   const [farmId, setFarmId] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
-  const bottom = useRef<HTMLDivElement>(null);
+  const noteScroll = useRef<HTMLDivElement>(null);
 
   const load = useCallback(async () => {
     const response = await fetch("/api/messages", { cache: "no-store" });
@@ -31,7 +33,10 @@ export default function MessagesClient({ userId }: { userId: string }) {
   }, []);
 
   useEffect(() => void load(), [load]);
-  useEffect(() => bottom.current?.scrollIntoView({ behavior: "smooth" }), [messages]);
+  useEffect(() => {
+    const container = noteScroll.current;
+    if (container) container.scrollTop = container.scrollHeight;
+  }, [messages]);
   useEffect(() => {
     if (!farmId) return;
     const socket = io({ path: "/socket.io" });
@@ -62,24 +67,55 @@ export default function MessagesClient({ userId }: { userId: string }) {
   }
 
   return (
-    <main className="pixel-game-page">
-      <div className="pixel-game-canvas message-scene">
-        <div className="message-pixel-map">
-          <TreeArt className="message-pixel-tree left" />
-          <TreeArt className="message-pixel-tree right" />
-          <FarmHouse className="message-pixel-house" />
-          <div className="pixel-mailbox">
-            <EnvelopeIcon />
-            <span>每日第一张纸条，情侣值 +1</span>
-          </div>
-        </div>
+    <main className="messages-visual-page">
+      <div className="messages-game-scene">
+        <Image
+          className="messages-scene-background"
+          src={FARM_VISUAL_ASSETS.background.src}
+          alt=""
+          fill
+          priority
+          sizes="(max-width: 640px) 100vw, 860px"
+        />
+        <div className="messages-scene-wash" />
 
-        <div className="pixel-note-board">
-          <div className="pixel-note-title">COUPLE MESSAGE WALL</div>
-          <div className="pixel-note-scroll">
+        <header className="messages-title-sign">
+          <SceneAsset asset={FARM_VISUAL_ASSETS.hud.farmSign} label="留言小屋招牌" fill />
+          <span>
+            <b>情侣留言小屋</b>
+            <small>只属于我们的悄悄话</small>
+          </span>
+        </header>
+
+        <section className="messages-reward-note">
+          <span className="messages-reward-icon">
+            <SceneAsset
+              asset={FARM_VISUAL_ASSETS.hud.messagesButton}
+              label="留言信箱"
+              fill
+            />
+          </span>
+          <span>
+            <b>每日甜蜜奖励</b>
+            <small>每天第一张纸条，情侣值 +1</small>
+          </span>
+        </section>
+
+        <section className="messages-note-board">
+          <span className="messages-board-background" aria-hidden="true">
+            <SceneAsset asset={FARM_VISUAL_ASSETS.dialog.panel} label="留言墙面板" fill />
+          </span>
+          <h1>我们的留言墙</h1>
+          <div ref={noteScroll} className="messages-note-scroll">
             {!messages.length && (
-              <div className="pixel-empty-mail">
-                <EnvelopeIcon />
+              <div className="messages-empty-mail">
+                <span>
+                  <SceneAsset
+                    asset={FARM_VISUAL_ASSETS.hud.messagesButton}
+                    label="空信箱"
+                    fill
+                  />
+                </span>
                 <p>信箱还空着，写下第一张小纸条吧。</p>
               </div>
             )}
@@ -88,39 +124,73 @@ export default function MessagesClient({ userId }: { userId: string }) {
               return (
                 <article
                   key={message.id}
-                  className={`pixel-note color-${index % 4} ${mine ? "mine" : ""}`}
+                  className={`messages-note color-${index % 4} ${mine ? "mine" : ""}`}
                 >
-                  <b>{mine ? "我" : message.user.username}</b>
-                  <p>{message.content}</p>
-                  <time>{new Date(message.createdAt).toLocaleString("zh-CN")}</time>
+                  <span className="messages-note-paper" aria-hidden="true">
+                    <SceneAsset
+                      asset={FARM_VISUAL_ASSETS.dialog.seedCard}
+                      label="留言纸条"
+                      fill
+                    />
+                  </span>
+                  <div>
+                    <b>{mine ? "我" : message.user.username}</b>
+                    <p>{message.content}</p>
+                    <time>{new Date(message.createdAt).toLocaleString("zh-CN")}</time>
+                  </div>
                 </article>
               );
             })}
-            <div ref={bottom} />
           </div>
-        </div>
+        </section>
 
-        <form onSubmit={send} className="pixel-mail-compose">
+        <form onSubmit={send} className="messages-compose">
           <textarea
             name="content"
-            rows={2}
+            rows={3}
             maxLength={300}
             required
             placeholder="写一张给对方的小纸条..."
           />
           <button disabled={busy}>
-            <EnvelopeIcon />
-            {busy ? "投递中" : "投入信箱"}
+            <span>
+              <SceneAsset
+                asset={FARM_VISUAL_ASSETS.hud.messagesButton}
+                label="投递留言"
+                fill
+              />
+            </span>
+            <b>{busy ? "投递中" : "投入信箱"}</b>
           </button>
         </form>
 
         {error && (
-          <button className="pixel-toast error" onClick={() => setError("")}>
+          <button className="messages-visual-toast error" onClick={() => setError("")}>
             {error}
           </button>
         )}
+
+        <nav className="messages-visual-nav" aria-label="游戏导航">
+          <Link href="/farm">
+            <span className="messages-nav-art farm-art">
+              <SceneAsset asset={FARM_VISUAL_ASSETS.plots.empty} label="农场" fill />
+            </span>
+            <b>农场</b>
+          </Link>
+          <Link href="/shop">
+            <span className="messages-nav-art">
+              <SceneAsset asset={FARM_VISUAL_ASSETS.hud.shopButton} label="商店" fill />
+            </span>
+            <b>商店</b>
+          </Link>
+          <Link href="/messages" className="active">
+            <span className="messages-nav-art">
+              <SceneAsset asset={FARM_VISUAL_ASSETS.hud.messagesButton} label="留言" fill />
+            </span>
+            <b>留言</b>
+          </Link>
+        </nav>
       </div>
-      <Nav />
     </main>
   );
 }

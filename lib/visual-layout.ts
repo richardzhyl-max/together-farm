@@ -20,6 +20,11 @@ const asset = (src: string, description: string, available = false): VisualAsset
   description,
 });
 
+export const FARM_VISUAL_CONFIG = {
+  // Crops are transparent standalone layers rendered over the plot artwork.
+  usePlotStateImageOnly: false,
+} as const;
+
 export const FARM_VISUAL_ASSETS = {
   background: asset(
     "/assets/game/backgrounds/farm-mobile.webp",
@@ -27,11 +32,11 @@ export const FARM_VISUAL_ASSETS = {
     true,
   ),
   plots: {
-    empty: asset("/assets/game/plots/plot-empty.webp?v=4", "空闲土地", true),
-    growing: asset("/assets/game/plots/plot-growing.webp?v=4", "生长中土地", true),
-    mature: asset("/assets/game/plots/plot-mature.webp?v=4", "成熟土地", true),
-    withered: asset("/assets/game/plots/plot-withered.webp?v=4", "枯萎土地", true),
-    selected: asset("/assets/game/plots/plot-selected.webp?v=4", "土地选中高亮", true),
+    empty: asset("/assets/game/plots/plot-empty.webp", "空闲土地", true),
+    growing: asset("/assets/game/plots/plot-growing.webp", "生长中土地", true),
+    mature: asset("/assets/game/plots/plot-mature.webp", "成熟土地", true),
+    withered: asset("/assets/game/plots/plot-withered.webp", "枯萎土地", true),
+    selected: asset("/assets/game/plots/plot-selected.webp", "土地选中高亮", true),
   },
   crops: {
     radish: cropAssets("carrot", true),
@@ -111,13 +116,14 @@ export const FARM_VISUAL_LAYOUT = {
     love: { x: 34, y: 2, width: 29, height: 6.4, zIndex: 50 },
     farmSign: { x: 31, y: 8.5, width: 38, height: 11, zIndex: 45 },
     invite: { x: 77, y: 1.4, width: 14, height: 8, zIndex: 50 },
+    harvestAll: { x: 34, y: 77.5, width: 32, height: 5.8, zIndex: 55 },
     shop: { x: 64, y: 87, width: 14, height: 8, zIndex: 55 },
     messages: { x: 80, y: 87, width: 14, height: 8, zIndex: 55 },
     logout: { x: 92, y: 1.7, width: 7, height: 4, zIndex: 55 },
   },
   plots: {
     centerX: 50,
-    centerY: 52,
+    centerY: 54,
     maxColumns: 5,
   },
   petHome: { x: 78, y: 32.5, width: 14, height: 10.5, zIndex: 34 } satisfies VisualRect,
@@ -130,12 +136,12 @@ export function farmPlotRect(index: number, total: number): VisualRect {
   const config = FARM_VISUAL_LAYOUT.plots;
   const size =
     total <= 4
-      ? { width: 19, height: 12.5, columnGap: 2, rowGap: 1.5 }
+      ? { width: 21.5, height: 14.2, columnGap: 2.5, rowGap: 1.8, centerY: 56 }
       : total <= 9
-        ? { width: 16, height: 10.5, columnGap: 1.5, rowGap: 1.3 }
+        ? { width: 17, height: 11.2, columnGap: 1.5, rowGap: 1.4, centerY: 54.5 }
         : total <= 16
-          ? { width: 13.5, height: 9, columnGap: 1.2, rowGap: 1.2 }
-          : { width: 11.5, height: 7.7, columnGap: 1, rowGap: 1 };
+          ? { width: 13.2, height: 8.8, columnGap: 1, rowGap: 1.2, centerY: 54 }
+          : { width: 11, height: 7.35, columnGap: .8, rowGap: 1, centerY: 54 };
   const columns =
     total <= 4 ? 2 : total <= 9 ? 3 : total <= 16 ? 4 : config.maxColumns;
   const rows = Math.ceil(total / columns);
@@ -153,7 +159,7 @@ export function farmPlotRect(index: number, total: number): VisualRect {
       rowWidth / 2 +
       column * (size.width + size.columnGap),
     y:
-      config.centerY -
+      size.centerY -
       gridHeight / 2 +
       row * (size.height + size.rowGap),
     width: size.width,

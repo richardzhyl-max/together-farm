@@ -1,17 +1,13 @@
 "use client";
 
+import Image from "next/image";
+import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import {
-  CoinIcon,
-  CropArt,
-  DecorationArt,
-  FarmHouse,
-  HeartIcon,
-  PetArt,
-  SeedBagArt,
-  TreeArt,
-} from "@/components/GameAssets";
-import Nav from "@/components/Nav";
+  FARM_VISUAL_ASSETS,
+  type VisualAsset,
+} from "@/lib/visual-layout";
+import { SceneAsset } from "@/components/game/FarmGameScene";
 
 type Item = {
   key: string;
@@ -30,14 +26,12 @@ type Shop = {
   lovePoints: number;
   crops: Item[];
   pets: Item[];
-  decorations: Item[];
   ownedPets: string[];
   activePetKey: string | null;
-  ownedDecorations: Record<string, number>;
   expansion: { to: number; price: number } | null;
 };
 
-type Category = "seed" | "pet" | "decoration" | "expand";
+type Category = "seed" | "pet" | "expand";
 
 export default function ShopClient() {
   const [shop, setShop] = useState<Shop | null>(null);
@@ -54,7 +48,7 @@ export default function ShopClient() {
 
   useEffect(() => load(), [load]);
 
-  async function buy(type: "pet" | "decoration" | "expand", key?: string) {
+  async function buy(type: "pet" | "expand", key?: string) {
     setBusy(`${type}:${key || ""}`);
     setError("");
     const response = await fetch(`/api/shop/${type}`, {
@@ -88,42 +82,47 @@ export default function ShopClient() {
 
   if (!shop) {
     return (
-      <main className="pixel-game-page">
-        <div className="pixel-loading">LOADING SHOP...</div>
+      <main className="shop-visual-page">
+        <div className="shop-visual-loading">正在准备村口小卖部...</div>
       </main>
     );
   }
 
   return (
-    <main className="pixel-game-page">
-      <div className="pixel-game-canvas shop-scene">
-        <div className="shop-map">
-          <TreeArt className="shop-pixel-tree left" />
-          <TreeArt className="shop-pixel-tree right" />
-          <FarmHouse className="shop-pixel-building" />
-          <div className="pixel-shop-sign">SEED &amp; PET SHOP</div>
-        </div>
+    <main className="shop-visual-page">
+      <div className="shop-game-scene">
+        <Image
+          className="shop-scene-background"
+          src={FARM_VISUAL_ASSETS.background.src}
+          alt=""
+          fill
+          priority
+          sizes="(max-width: 640px) 100vw, 860px"
+        />
+        <div className="shop-scene-wash" />
 
-        <div className="shop-pixel-wallet">
-          <span>
-            <CoinIcon /> <b>{shop.coins}</b>
-          </span>
-          <span>
-            <HeartIcon /> <b>{shop.lovePoints}</b>
-          </span>
-        </div>
+        <header className="shop-visual-hud">
+          <ShopHud asset={FARM_VISUAL_ASSETS.hud.coinBar} text={`金币 ${shop.coins}`} />
+          <ShopHud asset={FARM_VISUAL_ASSETS.hud.loveBar} text={`情侣值 ${shop.lovePoints}`} />
+          <div className="shop-title-sign">
+            <SceneAsset asset={FARM_VISUAL_ASSETS.hud.farmSign} label="商店招牌" fill />
+            <span>
+              <b>村口小卖部</b>
+              <small>农场好物补给站</small>
+            </span>
+          </div>
+        </header>
 
-        <div className="pixel-shop-window">
-          <div className="pixel-shopkeeper" aria-hidden="true" />
-          <p>欢迎光临！选好商品后会直接送到共同农场。</p>
-        </div>
+        <section className="shopkeeper-note">
+          <b>欢迎光临！</b>
+          <span>购买后会直接送到共同农场。</span>
+        </section>
 
-        <div className="pixel-shop-tabs">
+        <div className="shop-category-tabs" role="tablist" aria-label="商品分类">
           {(
             [
               ["seed", "种子"],
               ["pet", "宠物"],
-              ["decoration", "装饰"],
               ["expand", "扩建"],
             ] as [Category, string][]
           ).map(([key, label]) => (
@@ -131,25 +130,28 @@ export default function ShopClient() {
               key={key}
               className={category === key ? "active" : ""}
               onClick={() => setCategory(key)}
+              role="tab"
+              aria-selected={category === key}
             >
               {label}
             </button>
           ))}
         </div>
 
-        <div className="pixel-shop-shelf">
+        <section className="shop-product-shelf">
           {category === "seed" &&
             shop.crops.map((item) => (
-              <article key={item.key} className="pixel-product-card">
-                <SeedBagArt cropKey={item.key} className="pixel-product-art" />
-                <CropArt cropKey={item.key} stage="mature" className="pixel-product-crop" />
-                <b>{item.name}</b>
+              <article key={item.key} className="shop-product-card">
+                <CardBackground />
+                <div className="shop-product-pair">
+                  <ShopAsset asset={seedAsset(item.key)} label={`${item.name}种子袋`} />
+                  <ShopAsset asset={cropAsset(item.key)} label={`${item.name}成熟作物`} />
+                </div>
+                <b className="shop-product-name">{item.name}</b>
                 <small>
                   {item.rarity} · 收获 {item.sellPrice}
                 </small>
-                <span>
-                  <CoinIcon /> {item.seedPrice}
-                </span>
+                <PriceTag price={item.seedPrice || 0} />
                 <em>在农场空地购买</em>
               </article>
             ))}
@@ -160,12 +162,15 @@ export default function ShopClient() {
               const active = shop.activePetKey === item.key;
               const locked = shop.lovePoints < item.unlockLove;
               return (
-                <article key={item.key} className="pixel-product-card">
-                  <PetArt petKey={item.key} className="pixel-product-pet" />
-                  <b>{item.name}</b>
+                <article key={item.key} className="shop-product-card">
+                  <CardBackground />
+                  <div className="shop-product-main-art">
+                    <ShopAsset asset={petAsset(item.key)} label={`${item.name}素材`} />
+                  </div>
+                  <b className="shop-product-name">{item.name}</b>
                   <small>{item.description}</small>
                   <button
-                    className={active ? "active-pet" : ""}
+                    className={`shop-buy-button ${active ? "active-pet" : ""}`}
                     disabled={active || locked || Boolean(busy)}
                     onClick={() =>
                       owned ? choosePet(item.key) : buy("pet", item.key)
@@ -175,43 +180,34 @@ export default function ShopClient() {
                       ? "出场中"
                       : owned
                         ? "设为出场"
-                      : locked
+                        : locked
                         ? `需要 ${item.unlockLove} 爱心`
-                        : <><CoinIcon /> {item.price}</>}
+                        : <PriceTag price={item.price} compact />}
                   </button>
                 </article>
               );
             })}
 
-          {category === "decoration" &&
-            shop.decorations.map((item) => (
-              <article key={item.key} className="pixel-product-card">
-                <DecorationArt decorationKey={item.key} className="pixel-product-decoration" />
-                <b>{item.name}</b>
-                <small>农场已有 {shop.ownedDecorations[item.key] || 0} 个</small>
-                <button
-                  disabled={shop.lovePoints < item.unlockLove || Boolean(busy)}
-                  onClick={() => buy("decoration", item.key)}
-                >
-                  <CoinIcon /> {item.price}
-                </button>
-              </article>
-            ))}
-
           {category === "expand" && (
-            <div className="pixel-expand-panel">
-              <div className="pixel-expand-plots">
-                <i />
-                <i />
-                <i />
-                <i />
+            <div className="shop-expand-panel">
+              <CardBackground />
+              <div className="shop-expand-plots">
+                {[0, 1, 2, 3].map((index) => (
+                  <span key={index}>
+                    <SceneAsset asset={FARM_VISUAL_ASSETS.plots.empty} label="土地" fill />
+                  </span>
+                ))}
               </div>
               {shop.expansion ? (
                 <>
                   <h2>扩建到 {shop.expansion.to} 块土地</h2>
                   <p>村长会为你整理一块新的农田。</p>
-                  <button disabled={Boolean(busy)} onClick={() => buy("expand")}>
-                    <CoinIcon /> {shop.expansion.price} · 开始扩建
+                  <button
+                    className="shop-buy-button"
+                    disabled={Boolean(busy)}
+                    onClick={() => buy("expand")}
+                  >
+                    <PriceTag price={shop.expansion.price} compact /> · 开始扩建
                   </button>
                 </>
               ) : (
@@ -219,11 +215,11 @@ export default function ShopClient() {
               )}
             </div>
           )}
-        </div>
+        </section>
 
         {(error || message) && (
           <button
-            className={`pixel-toast ${error ? "error" : ""}`}
+            className={`shop-visual-toast ${error ? "error" : ""}`}
             onClick={() => {
               setError("");
               setMessage("");
@@ -232,8 +228,69 @@ export default function ShopClient() {
             {error || message}
           </button>
         )}
+
+        <nav className="shop-visual-nav" aria-label="游戏导航">
+          <Link href="/farm">
+            <span className="shop-nav-art farm-art">
+              <SceneAsset asset={FARM_VISUAL_ASSETS.plots.empty} label="农场" fill />
+            </span>
+            <b>农场</b>
+          </Link>
+          <Link href="/shop" className="active">
+            <span className="shop-nav-art">
+              <SceneAsset asset={FARM_VISUAL_ASSETS.hud.shopButton} label="商店" fill />
+            </span>
+            <b>商店</b>
+          </Link>
+          <Link href="/messages">
+            <span className="shop-nav-art">
+              <SceneAsset asset={FARM_VISUAL_ASSETS.hud.messagesButton} label="留言" fill />
+            </span>
+            <b>留言</b>
+          </Link>
+        </nav>
       </div>
-      <Nav />
     </main>
   );
+}
+
+function ShopHud({ asset, text }: { asset: VisualAsset; text: string }) {
+  return (
+    <div className="shop-hud-value">
+      <SceneAsset asset={asset} label={text} fill />
+      <span>{text}</span>
+    </div>
+  );
+}
+
+function CardBackground() {
+  return (
+    <span className="shop-card-background" aria-hidden="true">
+      <SceneAsset asset={FARM_VISUAL_ASSETS.dialog.seedCard} label="商品卡片" fill />
+    </span>
+  );
+}
+
+function ShopAsset({ asset, label }: { asset: VisualAsset | undefined; label: string }) {
+  return (
+    <span className="shop-asset">
+      <SceneAsset asset={asset} label={label} fill />
+    </span>
+  );
+}
+
+function PriceTag({ price, compact = false }: { price: number; compact?: boolean }) {
+  return <span className={`shop-price-tag ${compact ? "compact" : ""}`}>金币 {price}</span>;
+}
+
+function seedAsset(key: string) {
+  return FARM_VISUAL_ASSETS.seedBags[key as keyof typeof FARM_VISUAL_ASSETS.seedBags];
+}
+
+function cropAsset(key: string) {
+  return FARM_VISUAL_ASSETS.crops[key as keyof typeof FARM_VISUAL_ASSETS.crops]?.mature;
+}
+
+function petAsset(key: string) {
+  return FARM_VISUAL_ASSETS.pets[key as keyof typeof FARM_VISUAL_ASSETS.pets];
 }
