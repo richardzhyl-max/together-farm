@@ -3,6 +3,8 @@
 Phase 1 intentionally contains no temporary artwork. Do not replace these files
 with CSS drawings, SVG sketches, emoji, pixel tiles, or unrelated placeholders.
 
+All asset paths below are relative to `public/assets/game/`.
+
 Required background:
 
 - `backgrounds/farm-mobile.webp` — 860x1520 complete farm illustration
@@ -35,6 +37,7 @@ Required pets:
 
 - `pets/dog-idle.webp`
 - `pets/dog-idle-sprite.png` — 1536x1024, 2 rows x 4 columns, 8-frame idle loop
+- `pets/dog-idle-video-sprite.png` — 2304x2048, 6 columns x 4 rows, extracted from video with a fixed crop and bottom baseline
 - `pets/cat-idle.webp`
 - `pets/rabbit-idle.webp`
 - `pets/fairy-idle.webp`

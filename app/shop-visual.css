@@ -75,12 +75,12 @@
   position: absolute;
   left: 31%;
   right: 17%;
-  top: 22%;
-  bottom: 17%;
+  top: 27%;
+  bottom: 12%;
   z-index: 2;
   display: grid;
   place-items: center;
-  font-size: clamp(9px, 2.2vw, 16px);
+  font-size: clamp(10px, 2.3vw, 15px);
   font-weight: 900;
   line-height: 1;
   white-space: nowrap;
@@ -269,6 +269,15 @@
   font-size: clamp(8px, 1.9vw, 11px);
   font-style: normal;
   font-weight: 700;
+}
+
+.shop-seed-card {
+  padding-bottom: 15px;
+}
+
+.shop-seed-card em {
+  margin-top: 2px;
+  line-height: 1;
 }
 
 .shop-price-tag {

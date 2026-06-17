@@ -141,7 +141,7 @@ export default function ShopClient() {
         <section className="shop-product-shelf">
           {category === "seed" &&
             shop.crops.map((item) => (
-              <article key={item.key} className="shop-product-card">
+              <article key={item.key} className="shop-product-card shop-seed-card">
                 <CardBackground />
                 <div className="shop-product-pair">
                   <ShopAsset asset={seedAsset(item.key)} label={`${item.name}种子袋`} />
@@ -151,8 +151,8 @@ export default function ShopClient() {
                 <small>
                   {item.rarity} · 收获 {item.sellPrice}
                 </small>
+                <em>需在农场空地购买</em>
                 <PriceTag price={item.seedPrice || 0} />
-                <em>在农场空地购买</em>
               </article>
             ))}
 

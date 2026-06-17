@@ -1,5 +1,7 @@
 # Tiny Ranch local asset setup
 
+All project paths below are relative to the repository root.
+
 The pixel migration uses **[8x8] Tiny Ranch Asset Pack** by Gustavo Vituri:
 
 https://gvituri.itch.io/tiny-ranch

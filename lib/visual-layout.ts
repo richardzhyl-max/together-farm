@@ -94,11 +94,18 @@ export const PET_ANIMATION_CONFIGS: Partial<
   Record<keyof typeof FARM_VISUAL_ASSETS.pets, PetAnimationConfig>
 > = {
   dog: {
-    spriteSheet: "/assets/game/pets/dog-idle-sprite.png",
-    rows: 2,
-    cols: 4,
-    frameCount: 8,
-    frameDuration: 150,
+    spriteSheet: "/assets/game/pets/dog-idle-video-sprite.png",
+    rows: 4,
+    cols: 6,
+    frameCount: 24,
+    frameDuration: 220,
+  },
+  rabbit: {
+    spriteSheet: "/assets/game/pets/rabbit-idle-video-sprite.png",
+    rows: 4,
+    cols: 6,
+    frameCount: 24,
+    frameDuration: 220,
   },
 };
 
@@ -140,6 +147,7 @@ export const FARM_VISUAL_LAYOUT = {
     coins: { x: 2.5, y: 2, width: 29, height: 6.4, zIndex: 50 },
     love: { x: 34, y: 2, width: 29, height: 6.4, zIndex: 50 },
     loveBond: { x: 5.4, y: 86, width: 18.5, height: 6.2, zIndex: 42 },
+    dailyWish: { x: 4.5, y: 73.5, width: 32, height: 10.5, zIndex: 54 },
     farmSign: { x: 31, y: 8.5, width: 38, height: 11, zIndex: 45 },
     invite: { x: 77, y: 1.4, width: 14, height: 8, zIndex: 50 },
     harvestAll: { x: 34, y: 77.5, width: 32, height: 5.8, zIndex: 55 },

@@ -10,7 +10,7 @@
 - 仅土地、作物、宠物、HUD 和操作弹窗作为动态交互层。
 - 所有场景坐标和资源路径集中在 `lib/visual-layout.ts`。
 - 当前阶段只搭建 `/farm` 的视觉架构，不用 CSS、SVG、emoji 或像素素材伪造缺失美术。
-- 正式素材清单见 [`public/assets/game/README.md`](public/assets/game/README.md)。
+- 正式素材清单见 [`FARM_VISUAL_ASSETS.md`](FARM_VISUAL_ASSETS.md)。
 
 `/shop` 与 `/messages` 暂时保留上一阶段视觉，后续在 `/farm` 美术验收后单独迁移。
 

@@ -32,6 +32,16 @@ type Farm = {
   members: { id: string; username: string }[];
   plots: Plot[];
   pets: { key: string; name: string; description: string }[];
+  dailyWish: {
+    dateKey: string;
+    cropKey: string;
+    cropName: string;
+    required: number;
+    readyCount: number;
+    coinReward: number;
+    loveReward: number;
+    completed: boolean;
+  } | null;
 };
 
 function formatRemaining(target: string | null, now: number) {
@@ -133,6 +143,39 @@ export default function FarmClient() {
     setTimeout(() => setNotice(""), 2400);
   }
 
+  async function choosePet(key: string) {
+    if (key === farm?.activePetKey) return;
+    const path = "/api/farm/pet/active";
+    setBusy(`${path}:${key}`);
+    setError("");
+    const response = await fetch(path, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ key }),
+    });
+    const result = await response.json();
+    setBusy("");
+    if (!response.ok) return setError(result.error);
+    setNotice("这只宠物已经到宠物窝门口啦");
+    setSelected(null);
+    await load();
+    setTimeout(() => setNotice(""), 2200);
+  }
+
+  async function completeDailyWish() {
+    const path = "/api/farm/daily-wish";
+    setBusy(path);
+    setError("");
+    const response = await fetch(path, { method: "POST" });
+    const result = await response.json();
+    setBusy("");
+    if (!response.ok) return setError(result.error);
+    setNotice(`完成今日心愿，获得 ${result.coinReward} 金币和 ${result.loveReward} 情侣值`);
+    setSelected(null);
+    await load();
+    setTimeout(() => setNotice(""), 2800);
+  }
+
   async function logout() {
     await fetch("/api/auth/logout", { method: "POST" });
     router.push("/login");
@@ -160,6 +203,10 @@ export default function FarmClient() {
       }
       onHarvestAll={harvestAll}
       harvestAllBusy={busy === "/api/farm/harvest-all"}
+      onCompleteDailyWish={completeDailyWish}
+      dailyWishBusy={busy === "/api/farm/daily-wish"}
+      onChoosePet={choosePet}
+      petSwitchBusy={busy.startsWith("/api/farm/pet/active")}
       onLogout={logout}
       onDismissMessage={() => {
         setError("");

@@ -41,8 +41,8 @@ export async function requireMember(userId: string) {
   return member;
 }
 
-export async function petBonuses(farmId: string) {
-  const pets = await prisma.farmPet.findMany({
+export async function petBonuses(farmId: string, client: Prisma.TransactionClient | PrismaClient = prisma) {
+  const pets = await client.farmPet.findMany({
     where: { farmId },
     include: { pet: true },
   });
@@ -54,13 +54,76 @@ export async function petBonuses(farmId: string) {
   };
 }
 
-function dateKey(date = new Date()) {
+export function dateKey(date = new Date()) {
   return new Intl.DateTimeFormat("en-CA", {
     timeZone: "Asia/Shanghai",
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
   }).format(date);
+}
+
+function stableHash(input: string) {
+  let hash = 2166136261;
+  for (let index = 0; index < input.length; index += 1) {
+    hash ^= input.charCodeAt(index);
+    hash = Math.imul(hash, 16777619);
+  }
+  return hash >>> 0;
+}
+
+export function dailyWishFor(
+  farmId: string,
+  crops: { key: string; name: string; rarity: string; sellPrice: number }[],
+  plotCount: number,
+  day = dateKey(),
+) {
+  if (!crops.length) return null;
+  const affordablePool = crops.filter((crop) => crop.rarity !== "史诗");
+  const pool = affordablePool.length ? affordablePool : crops;
+  const hash = stableHash(`${farmId}:${day}:daily-wish`);
+  const crop = pool[hash % pool.length];
+  const required = Math.min(Math.max(2, Math.floor(plotCount / 3)), 5);
+  const coinReward = Math.floor(crop.sellPrice * required * 1.35);
+  const loveReward = 4 + required * 2;
+
+  return {
+    dateKey: day,
+    cropKey: crop.key,
+    cropName: crop.name,
+    required,
+    coinReward,
+    loveReward,
+  };
+}
+
+export async function dailyWishSnapshot(farmId: string, plotCount: number) {
+  const [crops, completed] = await Promise.all([
+    prisma.cropConfig.findMany({ where: { enabled: true }, orderBy: { seedPrice: "asc" } }),
+    prisma.farmEventLog.findFirst({
+      where: {
+        farmId,
+        type: "daily_wish_completed",
+        payload: { contains: `"dateKey":"${dateKey()}"` },
+      },
+    }),
+  ]);
+  const wish = dailyWishFor(farmId, crops, plotCount);
+  if (!wish) return null;
+  const readyCount = await prisma.plot.count({
+    where: {
+      farmId,
+      cropKey: wish.cropKey,
+      matureAt: { lte: new Date() },
+      witherAt: { gt: new Date() },
+    },
+  });
+
+  return {
+    ...wish,
+    readyCount,
+    completed: Boolean(completed),
+  };
 }
 
 export async function recordDailyLogin(userId: string, farmId: string) {
@@ -124,7 +187,10 @@ export async function farmSnapshot(userId: string) {
   });
   const cropRows = await prisma.cropConfig.findMany({ where: { enabled: true } });
   const crops = Object.fromEntries(cropRows.map((crop) => [crop.key, crop]));
-  const bonuses = await petBonuses(farm.id);
+  const [bonuses, dailyWish] = await Promise.all([
+    petBonuses(farm.id),
+    dailyWishSnapshot(farm.id, farm.plotCount),
+  ]);
   const now = new Date();
   return {
     id: farm.id,
@@ -144,6 +210,7 @@ export async function farmSnapshot(userId: string) {
     decorations: farm.decorations.map((row) => ({ ...row.decoration, quantity: row.quantity })),
     bonuses,
     expansion: expansionFor(farm.plotCount),
+    dailyWish,
     serverNow: now.toISOString(),
   };
 }

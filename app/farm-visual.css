@@ -37,9 +37,11 @@
 .farm-visual-plot > img,
 .farm-crop-visual > img,
 .farm-visual-pet > img,
+.farm-pet-switch-item img,
 .farm-plot-dialog > img,
 .farm-dialog-crop > img,
-.farm-dialog-action > img {
+.farm-dialog-action > img,
+.farm-daily-wish-crop > img {
   object-fit: contain;
   pointer-events: none;
 }
@@ -334,21 +336,43 @@
   animation: farmHarvestSparkle 6.2s ease-in-out infinite;
 }
 
+.farm-pet-control {
+  position: absolute;
+  pointer-events: auto;
+}
+
 .farm-visual-pet {
   position: absolute;
-  animation: farmPetWalk 12s linear infinite;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
   filter: drop-shadow(0 3px 2px rgba(47, 72, 30, .3));
-  transform-origin: 50% 88%;
-  will-change: transform;
 }
 
-.farm-visual-pet > img {
-  animation: farmPetStep .48s ease-in-out infinite alternate;
-  transform-origin: 50% 88%;
+.farm-visual-pet:focus-visible {
+  outline: 2px solid rgba(255, 238, 126, .95);
+  outline-offset: 2px;
+  border-radius: 999px;
 }
 
-.farm-visual-pet.has-sprite-animation {
+.farm-pet-breath {
+  position: absolute;
+  inset: 0;
+  animation: farmPetBreath 2.8s ease-in-out infinite alternate;
+  transform-origin: center bottom;
+}
+
+.farm-pet-breath.has-sprite {
   animation: none;
+}
+
+.farm-pet-breath > img {
+  object-fit: contain;
+  object-position: center bottom;
 }
 
 .farm-pet-sprite {
@@ -360,16 +384,100 @@
   background-size:
     calc(var(--pet-sprite-cols) * 100%)
     calc(var(--pet-sprite-rows) * 100%);
+  transform-origin: center bottom;
 }
 
 .farm-visual-pet.pet-fairy {
   top: 30.5% !important;
-  animation-name: farmFairyPatrol;
-  animation-duration: 10s;
 }
 
-.farm-visual-pet.pet-fairy > img {
-  animation-duration: .85s;
+.farm-pet-switch-popover {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 7px);
+  z-index: 6;
+  width: min(210px, 52vw);
+  transform: translateX(-50%);
+  border: 2px solid #8a4b20;
+  border-radius: 999px;
+  background:
+    linear-gradient(180deg, rgba(255, 240, 179, .96), rgba(218, 143, 63, .94));
+  padding: 6px 8px;
+  box-shadow:
+    inset 0 1px rgba(255, 255, 255, .65),
+    0 3px 0 #6f3b1c,
+    0 7px 12px rgba(42, 49, 25, .32);
+}
+
+.farm-pet-switch-popover::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 100%;
+  width: 12px;
+  height: 12px;
+  border-right: 2px solid #8a4b20;
+  border-bottom: 2px solid #8a4b20;
+  background: rgba(218, 143, 63, .94);
+  transform: translate(-50%, -5px) rotate(45deg);
+}
+
+.farm-pet-switch-scroll {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  gap: 7px;
+  overflow-x: auto;
+  padding: 1px 1px 3px;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  scroll-snap-type: x proximity;
+}
+
+.farm-pet-switch-scroll::-webkit-scrollbar { display: none; }
+
+.farm-pet-switch-item {
+  position: relative;
+  flex: 0 0 42px;
+  width: 42px;
+  height: 42px;
+  border: 2px solid #995520;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 35%, #fff4be, #df9438);
+  padding: 4px;
+  box-shadow:
+    inset 0 1px rgba(255, 255, 255, .7),
+    0 2px 0 #6f3b1c;
+  scroll-snap-align: center;
+}
+
+.farm-pet-switch-item > span {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.farm-pet-switch-item img {
+  object-fit: contain;
+}
+
+.farm-pet-switch-item.active {
+  border-color: #4f8c34;
+  background: radial-gradient(circle at 50% 35%, #f4ffd7, #72b84b);
+  box-shadow:
+    inset 0 1px rgba(255, 255, 255, .75),
+    0 2px 0 #376d2e,
+    0 0 0 2px rgba(255, 245, 153, .72);
+}
+
+.farm-pet-switch-item:disabled {
+  cursor: default;
+}
+
+.farm-pet-switch-item:focus-visible {
+  outline: 2px solid rgba(255, 255, 207, .95);
+  outline-offset: 2px;
 }
 
 .farm-hud-control {
@@ -447,6 +555,103 @@
   white-space: nowrap;
 }
 
+.farm-daily-wish {
+  pointer-events: auto;
+  position: absolute;
+  display: grid;
+  grid-template-columns: 22% minmax(0, 1fr) 25%;
+  align-items: center;
+  gap: 3%;
+  border: 2px solid #754013;
+  border-radius: 11px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, .46), transparent 35%),
+    linear-gradient(180deg, #fff1b9 0%, #e8bc68 100%);
+  box-shadow:
+    inset 0 0 0 2px rgba(255, 246, 190, .9),
+    inset 0 -3px 0 rgba(116, 62, 20, .18),
+    0 3px 0 #65350f,
+    0 7px 12px rgba(72, 42, 13, .34);
+  padding: 2.2% 3%;
+  color: #70401c;
+  text-shadow: 0 1px rgba(255, 248, 211, .9);
+}
+
+.farm-daily-wish.completed {
+  filter: saturate(.88) brightness(.96);
+}
+
+.farm-daily-wish-crop {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1;
+  filter: drop-shadow(0 2px 2px rgba(76, 47, 16, .25));
+}
+
+.farm-daily-wish-copy {
+  min-width: 0;
+  display: grid;
+  gap: 1px;
+  line-height: 1.05;
+}
+
+.farm-daily-wish-copy b,
+.farm-daily-wish-copy span,
+.farm-daily-wish-copy small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.farm-daily-wish-copy b {
+  font-size: clamp(8px, 1.5vw, 13px);
+  font-weight: 900;
+}
+
+.farm-daily-wish-copy span {
+  color: #8a3d13;
+  font-size: clamp(9px, 1.7vw, 14px);
+  font-weight: 900;
+}
+
+.farm-daily-wish-copy small {
+  font-size: clamp(6px, 1.05vw, 9px);
+  font-weight: 800;
+}
+
+.farm-daily-wish button {
+  min-width: 0;
+  border: 2px solid #7d471d;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #74c850 0%, #3c9635 100%);
+  box-shadow:
+    inset 0 1px rgba(255, 255, 255, .45),
+    0 2px 0 #2c6828;
+  padding: 3px 4px 4px;
+  color: #fffbe2;
+  font-family: inherit;
+  font-size: clamp(7px, 1.3vw, 11px);
+  font-weight: 900;
+  line-height: 1;
+  text-shadow: 0 1px #286a28;
+  white-space: nowrap;
+}
+
+.farm-daily-wish button:not(:disabled):active {
+  transform: translateY(1px);
+  box-shadow: inset 0 1px rgba(255, 255, 255, .35), 0 1px 0 #2c6828;
+}
+
+.farm-daily-wish button:disabled {
+  cursor: default;
+  background: linear-gradient(180deg, #d5bd84 0%, #a8783d 100%);
+  box-shadow:
+    inset 0 1px rgba(255, 255, 255, .35),
+    0 2px 0 #6a471d;
+  color: #fff3c8;
+  text-shadow: 0 1px #6a471d;
+}
+
 .farm-name-control > span {
   position: absolute;
   left: 18%;
@@ -466,7 +671,6 @@
 .farm-name-control span small { display: block; }
 .farm-name-control span small { font-size: .65em; }
 
-.farm-invite-control > span,
 .farm-nav-control > span,
 .farm-logout-control > span {
   position: absolute;
@@ -919,81 +1123,9 @@
   font-size: clamp(11px, 2.5vw, 17px);
 }
 
-@keyframes farmPetWalk {
-  0%, 8% {
-    transform: translate3d(0, 0, 0) scaleX(-1);
-  }
-  13% {
-    transform: translate3d(-18%, -1.5%, 0) scaleX(-1);
-  }
-  19% {
-    transform: translate3d(-38%, 0, 0) scaleX(-1);
-  }
-  25% {
-    transform: translate3d(-58%, -1.5%, 0) scaleX(-1);
-  }
-  31% {
-    transform: translate3d(-78%, 0, 0) scaleX(-1);
-  }
-  37% {
-    transform: translate3d(-98%, -1.5%, 0) scaleX(-1);
-  }
-  43%, 49% {
-    transform: translate3d(-118%, 0, 0) scaleX(-1);
-  }
-  50%, 56% {
-    transform: translate3d(-118%, 0, 0) scaleX(1);
-  }
-  61% {
-    transform: translate3d(-98%, -1.5%, 0) scaleX(1);
-  }
-  67% {
-    transform: translate3d(-78%, 0, 0) scaleX(1);
-  }
-  73% {
-    transform: translate3d(-58%, -1.5%, 0) scaleX(1);
-  }
-  79% {
-    transform: translate3d(-38%, 0, 0) scaleX(1);
-  }
-  85% {
-    transform: translate3d(-18%, -1.5%, 0) scaleX(1);
-  }
-  91%, 97% {
-    transform: translate3d(0, 0, 0) scaleX(1);
-  }
-  98%, 100% {
-    transform: translate3d(0, 0, 0) scaleX(-1);
-  }
-}
-
-@keyframes farmFairyPatrol {
-  0%, 10% {
-    transform: translate3d(0, 0, 0) scaleX(1);
-  }
-  25% {
-    transform: translate3d(-45%, -5%, 0) scaleX(1);
-  }
-  43%, 49% {
-    transform: translate3d(-95%, 2%, 0) scaleX(1);
-  }
-  50%, 57% {
-    transform: translate3d(-95%, 2%, 0) scaleX(-1);
-  }
-  73% {
-    transform: translate3d(-45%, -5%, 0) scaleX(-1);
-  }
-  90%, 97% {
-    transform: translate3d(0, 0, 0) scaleX(-1);
-  }
-  98%, 100% {
-    transform: translate3d(0, 0, 0) scaleX(1);
-  }
-}
-
-@keyframes farmPetStep {
-  from { transform: translateY(0) rotate(-1.2deg) scale(1.01, .99); }
-  to { transform: translateY(-1.5%) rotate(1.2deg) scale(.99, 1.01); }
+@keyframes farmPetBreath {
+  from { transform: translateY(0); }
+  to { transform: translateY(-1px); }
 }
 
 @keyframes farmTreeSway {
@@ -1080,8 +1212,7 @@
   .farm-waterwheel-flow::after,
   .farm-pond-ripple,
   .farm-chimney-smoke,
-  .farm-visual-pet,
-  .farm-visual-pet > img,
+  .farm-pet-breath,
   .farm-visual-plot.state-mature .farm-crop-visual,
   .farm-visual-plot.state-mature .farm-crop-visual::after {
     animation: none;

@@ -39,6 +39,16 @@ export type FarmScenePet = {
   name: string;
 };
 
+export type FarmSceneDailyWish = {
+  cropKey: string;
+  cropName: string;
+  required: number;
+  readyCount: number;
+  coinReward: number;
+  loveReward: number;
+  completed: boolean;
+};
+
 type Props = {
   farm: {
     name: string;
@@ -49,6 +59,7 @@ type Props = {
     members: { username: string }[];
     plots: FarmScenePlot[];
     pets: FarmScenePet[];
+    dailyWish: FarmSceneDailyWish | null;
   };
   selectedPlotId: string | null;
   notice: string;
@@ -58,6 +69,10 @@ type Props = {
   onCopyInvite: () => void;
   onHarvestAll: () => void;
   harvestAllBusy: boolean;
+  onCompleteDailyWish: () => void;
+  dailyWishBusy: boolean;
+  onChoosePet: (key: string) => void;
+  petSwitchBusy: boolean;
   onLogout: () => void;
   onDismissMessage: () => void;
   dialog: ReactNode;
@@ -73,12 +88,17 @@ export default function FarmGameScene({
   onCopyInvite,
   onHarvestAll,
   harvestAllBusy,
+  onCompleteDailyWish,
+  dailyWishBusy,
+  onChoosePet,
+  petSwitchBusy,
   onLogout,
   onDismissMessage,
   dialog,
 }: Props) {
   const matureCount = farm.plots.filter((plot) => plot.state === "mature").length;
   const loveBond = loveBondFor(farm.lovePoints);
+  const [petSwitcherOpen, setPetSwitcherOpen] = useState(false);
 
   return (
     <main className="farm-visual-page">
@@ -140,17 +160,34 @@ export default function FarmGameScene({
               ];
             return (
               <div
-                className={`farm-visual-pet pet-${activePet.key} ${
-                  animation ? "has-sprite-animation" : ""
-                }`}
+                className="farm-pet-control"
                 style={visualRectStyle(FARM_VISUAL_LAYOUT.petHome)}
-                title={`${activePet.name}正在宠物窝门口玩耍`}
               >
-                <PetVisual
-                  asset={petAsset}
-                  animation={animation}
-                  label={`${activePet.name}素材`}
-                />
+                <button
+                  className={`farm-visual-pet pet-${activePet.key}`}
+                  type="button"
+                  onClick={() => setPetSwitcherOpen((open) => !open)}
+                  title={`${activePet.name}正在宠物窝门口玩耍，点击切换宠物`}
+                  aria-expanded={petSwitcherOpen}
+                  aria-label="打开宠物快捷切换"
+                >
+                  <PetVisual
+                    asset={petAsset}
+                    animation={animation}
+                    label={`${activePet.name}素材`}
+                  />
+                </button>
+                {petSwitcherOpen && (
+                  <PetSwitchPopover
+                    pets={farm.pets}
+                    activePetKey={activePet.key}
+                    busy={petSwitchBusy}
+                    onChoose={(key) => {
+                      onChoosePet(key);
+                      setPetSwitcherOpen(false);
+                    }}
+                  />
+                )}
               </div>
             );
           })()}
@@ -176,6 +213,13 @@ export default function FarmGameScene({
             className="farm-love-hud"
           />
           <LoveBondHud bond={loveBond} />
+          {farm.dailyWish && (
+            <DailyWishHud
+              wish={farm.dailyWish}
+              busy={dailyWishBusy}
+              onComplete={onCompleteDailyWish}
+            />
+          )}
           <div
             className="farm-hud-control farm-name-control"
             style={visualRectStyle(FARM_VISUAL_LAYOUT.hud.farmSign)}
@@ -190,13 +234,13 @@ export default function FarmGameScene({
             className="farm-hud-control farm-invite-control"
             style={visualRectStyle(FARM_VISUAL_LAYOUT.hud.invite)}
             onClick={onCopyInvite}
+            aria-label="复制邀请码"
           >
             <SceneAsset
               asset={FARM_VISUAL_ASSETS.hud.inviteButton}
               label="邀请码按钮素材"
               fill
             />
-            <span>{farm.inviteCode}</span>
           </button>
           {matureCount > 0 && (
             <button
@@ -263,6 +307,87 @@ export default function FarmGameScene({
   );
 }
 
+function DailyWishHud({
+  wish,
+  busy,
+  onComplete,
+}: {
+  wish: FarmSceneDailyWish;
+  busy: boolean;
+  onComplete: () => void;
+}) {
+  const ready = wish.readyCount >= wish.required;
+  const cropAsset =
+    FARM_VISUAL_ASSETS.crops[
+      wish.cropKey as keyof typeof FARM_VISUAL_ASSETS.crops
+    ]?.mature;
+
+  return (
+    <div
+      className={`farm-daily-wish ${wish.completed ? "completed" : ""}`}
+      style={visualRectStyle(FARM_VISUAL_LAYOUT.hud.dailyWish)}
+      aria-label={`今日心愿：${wish.cropName} ${Math.min(wish.readyCount, wish.required)} / ${wish.required}`}
+    >
+      <div className="farm-daily-wish-crop">
+        <SceneAsset asset={cropAsset} label={`${wish.cropName}成熟作物`} fill />
+      </div>
+      <div className="farm-daily-wish-copy">
+        <b>今日心愿</b>
+        <span>{wish.cropName} {Math.min(wish.readyCount, wish.required)} / {wish.required}</span>
+        <small>+{wish.coinReward} 金币 · +{wish.loveReward} 情侣值</small>
+      </div>
+      <button
+        type="button"
+        disabled={busy || wish.completed || !ready}
+        onClick={onComplete}
+      >
+        {wish.completed ? "已完成" : ready ? "提交" : "准备中"}
+      </button>
+    </div>
+  );
+}
+
+function PetSwitchPopover({
+  pets,
+  activePetKey,
+  busy,
+  onChoose,
+}: {
+  pets: FarmScenePet[];
+  activePetKey: string;
+  busy: boolean;
+  onChoose: (key: string) => void;
+}) {
+  return (
+    <div className="farm-pet-switch-popover" aria-label="快捷切换宠物">
+      <div className="farm-pet-switch-scroll">
+        {pets.map((pet) => {
+          const asset =
+            FARM_VISUAL_ASSETS.pets[
+              pet.key as keyof typeof FARM_VISUAL_ASSETS.pets
+            ];
+          const active = pet.key === activePetKey;
+          return (
+            <button
+              key={pet.key}
+              className={`farm-pet-switch-item ${active ? "active" : ""}`}
+              type="button"
+              disabled={busy || active}
+              onClick={() => onChoose(pet.key)}
+              aria-label={`${active ? "当前出场：" : "切换到"}${pet.name}`}
+              title={pet.name}
+            >
+              <span>
+                <SceneAsset asset={asset} label={pet.name} fill />
+              </span>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 function PetVisual({
   asset,
   animation,
@@ -307,7 +432,11 @@ function PetVisual({
   }, [animation, spriteStatus]);
 
   if (!animation || spriteStatus !== "ready") {
-    return <SceneAsset asset={asset} label={label} fill />;
+    return (
+      <span className="farm-pet-breath">
+        <SceneAsset asset={asset} label={label} fill />
+      </span>
+    );
   }
 
   const column = frame % animation.cols;
@@ -322,7 +451,11 @@ function PetVisual({
     "--pet-sprite-y": `${y}%`,
   } as CSSProperties;
 
-  return <span className="farm-pet-sprite" style={style} aria-hidden="true" />;
+  return (
+    <span className="farm-pet-breath has-sprite">
+      <span className="farm-pet-sprite" style={style} aria-hidden="true" />
+    </span>
+  );
 }
 
 function LoveBondHud({
