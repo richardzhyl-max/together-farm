@@ -33,6 +33,10 @@ export async function POST() {
           sum + Math.floor((sellPrices.get(plot.cropKey) || 0) * (1 + bonuses.sell)),
         0,
       );
+      const cropCounts = harvestable.reduce<Record<string, number>>((counts, plot) => {
+        counts[plot.cropKey] = (counts[plot.cropKey] || 0) + 1;
+        return counts;
+      }, {});
 
       if (harvestable.length === 0) return { harvested: 0, earned: 0 };
 
@@ -63,6 +67,10 @@ export async function POST() {
           payload: JSON.stringify({
             plotIds: harvestable.map((plot) => plot.id),
             harvested: harvestable.length,
+            crops: Object.entries(cropCounts).map(([cropKey, count]) => ({
+              cropKey,
+              count,
+            })),
             earned,
           }),
         },

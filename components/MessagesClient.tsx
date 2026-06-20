@@ -183,6 +183,12 @@ export default function MessagesClient({ userId }: { userId: string }) {
             </span>
             <b>商店</b>
           </Link>
+          <Link href="/orders">
+            <span className="messages-nav-art">
+              <SceneAsset asset={FARM_VISUAL_ASSETS.dialog.harvestButton} label="订单" fill />
+            </span>
+            <b>订单</b>
+          </Link>
           <Link href="/messages" className="active">
             <span className="messages-nav-art">
               <SceneAsset asset={FARM_VISUAL_ASSETS.hud.messagesButton} label="留言" fill />

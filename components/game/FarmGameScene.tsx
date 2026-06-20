@@ -273,6 +273,14 @@ export default function FarmGameScene({
           </Link>
           <Link
             className="farm-hud-control farm-nav-control"
+            style={visualRectStyle(FARM_VISUAL_LAYOUT.hud.orders)}
+            href="/orders"
+          >
+            <SceneAsset asset={FARM_VISUAL_ASSETS.dialog.harvestButton} label="订单按钮素材" fill />
+            <span>订单</span>
+          </Link>
+          <Link
+            className="farm-hud-control farm-nav-control"
             style={visualRectStyle(FARM_VISUAL_LAYOUT.hud.messages)}
             href="/messages"
           >

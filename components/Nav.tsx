@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 const links = [
   { href: "/farm", label: "农场", icon: "field" },
   { href: "/shop", label: "商店", icon: "shop" },
+  { href: "/orders", label: "订单", icon: "order" },
   { href: "/messages", label: "留言", icon: "mail" },
 ];
 

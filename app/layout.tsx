@@ -4,6 +4,7 @@ import "./pixel.css";
 import "./farm-visual.css";
 import "./shop-visual.css";
 import "./messages-visual.css";
+import "./orders-visual.css";
 
 export const metadata: Metadata = {
   title: "两个人的农场",
