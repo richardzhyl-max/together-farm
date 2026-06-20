@@ -111,17 +111,31 @@ export const PET_ANIMATION_CONFIGS: Partial<
 > = {
   dog: {
     spriteSheet: "/assets/game/pets/dog-idle-video-sprite.png",
-    rows: 4,
+    rows: 16,
     cols: 6,
-    frameCount: 24,
-    frameDuration: 220,
+    frameCount: 96,
+    frameDuration: 55,
+  },
+  cat: {
+    spriteSheet: "/assets/game/pets/cat-idle-video-sprite.png",
+    rows: 16,
+    cols: 6,
+    frameCount: 96,
+    frameDuration: 55,
   },
   rabbit: {
-    spriteSheet: "/assets/game/pets/rabbit-idle-video-sprite.png",
-    rows: 4,
+    spriteSheet: "/assets/game/pets/rabbit-idle-video-sprite-v2.png",
+    rows: 16,
     cols: 6,
-    frameCount: 24,
-    frameDuration: 220,
+    frameCount: 96,
+    frameDuration: 20,
+  },
+  fairy: {
+    spriteSheet: "/assets/game/pets/fairy-idle-video-sprite-v2.png",
+    rows: 16,
+    cols: 6,
+    frameCount: 96,
+    frameDuration: 55,
   },
 };
 

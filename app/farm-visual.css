@@ -387,17 +387,12 @@
   transform-origin: center bottom;
 }
 
-.farm-visual-pet.pet-fairy {
-  top: 30.5% !important;
-}
-
 .farm-pet-switch-popover {
   position: absolute;
-  left: 50%;
+  right: -4px;
   bottom: calc(100% + 7px);
   z-index: 6;
-  width: min(210px, 52vw);
-  transform: translateX(-50%);
+  width: min(210px, calc(100vw - 24px));
   border: 2px solid #8a4b20;
   border-radius: 999px;
   background:
@@ -412,14 +407,14 @@
 .farm-pet-switch-popover::after {
   content: "";
   position: absolute;
-  left: 50%;
+  right: 26px;
   top: 100%;
   width: 12px;
   height: 12px;
   border-right: 2px solid #8a4b20;
   border-bottom: 2px solid #8a4b20;
   background: rgba(218, 143, 63, .94);
-  transform: translate(-50%, -5px) rotate(45deg);
+  transform: translateY(-5px) rotate(45deg);
 }
 
 .farm-pet-switch-scroll {
