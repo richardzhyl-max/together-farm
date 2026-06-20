@@ -69,6 +69,8 @@ type Props = {
   onCopyInvite: () => void;
   onHarvestAll: () => void;
   harvestAllBusy: boolean;
+  onClearWithered: () => void;
+  clearWitheredBusy: boolean;
   onCompleteDailyWish: () => void;
   dailyWishBusy: boolean;
   onChoosePet: (key: string) => void;
@@ -88,6 +90,8 @@ export default function FarmGameScene({
   onCopyInvite,
   onHarvestAll,
   harvestAllBusy,
+  onClearWithered,
+  clearWitheredBusy,
   onCompleteDailyWish,
   dailyWishBusy,
   onChoosePet,
@@ -97,6 +101,7 @@ export default function FarmGameScene({
   dialog,
 }: Props) {
   const matureCount = farm.plots.filter((plot) => plot.state === "mature").length;
+  const witheredCount = farm.plots.filter((plot) => plot.state === "withered").length;
   const loveBond = loveBondFor(farm.lovePoints);
   const [petSwitcherOpen, setPetSwitcherOpen] = useState(false);
 
@@ -245,7 +250,11 @@ export default function FarmGameScene({
           {matureCount > 0 && (
             <button
               className="farm-hud-control farm-harvest-all-control"
-              style={visualRectStyle(FARM_VISUAL_LAYOUT.hud.harvestAll)}
+              style={visualRectStyle(
+                witheredCount > 0
+                  ? FARM_VISUAL_LAYOUT.hud.harvestAllWithClear
+                  : FARM_VISUAL_LAYOUT.hud.harvestAll,
+              )}
               onClick={onHarvestAll}
               disabled={harvestAllBusy}
               aria-label={`一键收获，${matureCount} 块成熟土地`}
@@ -261,6 +270,31 @@ export default function FarmGameScene({
                 {harvestAllBusy ? "收获中" : "一键收获"}
               </span>
               <span className="farm-harvest-all-count">{matureCount}</span>
+            </button>
+          )}
+          {witheredCount > 0 && (
+            <button
+              className="farm-hud-control farm-harvest-all-control farm-clear-withered-control"
+              style={visualRectStyle(
+                matureCount > 0
+                  ? FARM_VISUAL_LAYOUT.hud.clearWitheredWithHarvest
+                  : FARM_VISUAL_LAYOUT.hud.clearWithered,
+              )}
+              onClick={onClearWithered}
+              disabled={clearWitheredBusy}
+              aria-label={`一键清理枯萎植物，${witheredCount} 块枯萎土地`}
+            >
+              <span className="farm-harvest-all-icon">
+                <SceneAsset
+                  asset={FARM_VISUAL_ASSETS.dialog.clearButton}
+                  label="一键清理按钮素材"
+                  fill
+                />
+              </span>
+              <span className="farm-harvest-all-label">
+                {clearWitheredBusy ? "清理中" : "一键清理"}
+              </span>
+              <span className="farm-harvest-all-count">{witheredCount}</span>
             </button>
           )}
           <Link

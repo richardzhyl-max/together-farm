@@ -781,6 +781,28 @@
   filter: brightness(.9);
 }
 
+.farm-clear-withered-control {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, .42), transparent 34%),
+    linear-gradient(180deg, #cfeb9e 0%, #88b65a 52%, #507c37 100%);
+  box-shadow:
+    inset 0 0 0 2px #e8ffc5,
+    inset 0 -3px 0 rgba(40, 82, 31, .28),
+    0 3px 0 #335221,
+    0 7px 12px rgba(36, 66, 25, .38);
+}
+
+.farm-clear-withered-control .farm-harvest-all-label {
+  text-shadow:
+    0 1px 0 #325a28,
+    0 2px 1px rgba(29, 65, 24, .5);
+}
+
+.farm-clear-withered-control .farm-harvest-all-count {
+  background: #6c8f43;
+  text-shadow: 0 1px #35521f;
+}
+
 .farm-harvest-all-label {
   position: relative !important;
   color: #fff7d4;

@@ -143,6 +143,24 @@ export default function FarmClient() {
     setTimeout(() => setNotice(""), 2400);
   }
 
+  async function clearWithered() {
+    const path = "/api/farm/clear-withered";
+    setBusy(path);
+    setError("");
+    const response = await fetch(path, { method: "POST" });
+    const result = await response.json();
+    setBusy("");
+    if (!response.ok) return setError(result.error);
+    setNotice(
+      result.cleared > 0
+        ? `一键清理 ${result.cleared} 块枯萎土地，获得 ${result.earned} 金币`
+        : "暂时没有枯萎植物",
+    );
+    setSelected(null);
+    await load();
+    setTimeout(() => setNotice(""), 2400);
+  }
+
   async function choosePet(key: string) {
     if (key === farm?.activePetKey) return;
     const path = "/api/farm/pet/active";
@@ -203,6 +221,8 @@ export default function FarmClient() {
       }
       onHarvestAll={harvestAll}
       harvestAllBusy={busy === "/api/farm/harvest-all"}
+      onClearWithered={clearWithered}
+      clearWitheredBusy={busy === "/api/farm/clear-withered"}
       onCompleteDailyWish={completeDailyWish}
       dailyWishBusy={busy === "/api/farm/daily-wish"}
       onChoosePet={choosePet}
