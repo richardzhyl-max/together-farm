@@ -2,7 +2,14 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+  type ReactNode,
+} from "react";
 import { loveBondFor } from "@/lib/love-bond";
 import {
   FARM_VISUAL_ASSETS,
@@ -66,19 +73,50 @@ type Props = {
   error: string;
   stageForPlot: (plot: FarmScenePlot) => CropVisualStage;
   onSelectPlot: (plot: FarmScenePlot) => void;
+  plantDragRequest: { crop: FarmSceneCrop; plotId: string; token: number } | null;
+  plantingBusy: boolean;
+  onPlantPlots: (crop: FarmSceneCrop, plotIds: string[]) => void;
+  waterDragRequest: { plotId: string; token: number } | null;
+  wateringBusy: boolean;
+  onWaterPlots: (plotIds: string[]) => void;
   onCopyInvite: () => void;
   onHarvestAll: () => void;
   harvestAllBusy: boolean;
   onClearWithered: () => void;
   clearWitheredBusy: boolean;
-  onCompleteDailyWish: () => void;
-  dailyWishBusy: boolean;
   onChoosePet: (key: string) => void;
   petSwitchBusy: boolean;
   onLogout: () => void;
   onDismissMessage: () => void;
   dialog: ReactNode;
 };
+
+function isPointInPlotHitArea(element: HTMLElement, clientX: number, clientY: number) {
+  const rect = element.getBoundingClientRect();
+  if (rect.width <= 0 || rect.height <= 0) return false;
+  const x = (clientX - rect.left) / rect.width;
+  const y = (clientY - rect.top) / rect.height;
+  const centerX = .5;
+  const centerY = .58;
+  const radiusX = .46;
+  const radiusY = .32;
+  return ((x - centerX) / radiusX) ** 2 + ((y - centerY) / radiusY) ** 2 <= 1;
+}
+
+function plotElementAtPoint(clientX: number, clientY: number) {
+  const elements = Array.from(
+    document.querySelectorAll<HTMLButtonElement>("[data-plot-id]"),
+  )
+    .map((element, index) => ({ element, index }))
+    .filter(({ element }) => isPointInPlotHitArea(element, clientX, clientY));
+
+  return elements.sort((a, b) => {
+    const zA = Number.parseInt(a.element.style.zIndex || "0", 10);
+    const zB = Number.parseInt(b.element.style.zIndex || "0", 10);
+    if (zA !== zB) return zB - zA;
+    return b.index - a.index;
+  })[0]?.element || null;
+}
 
 export default function FarmGameScene({
   farm,
@@ -87,13 +125,17 @@ export default function FarmGameScene({
   error,
   stageForPlot,
   onSelectPlot,
+  plantDragRequest,
+  plantingBusy,
+  onPlantPlots,
+  waterDragRequest,
+  wateringBusy,
+  onWaterPlots,
   onCopyInvite,
   onHarvestAll,
   harvestAllBusy,
   onClearWithered,
   clearWitheredBusy,
-  onCompleteDailyWish,
-  dailyWishBusy,
   onChoosePet,
   petSwitchBusy,
   onLogout,
@@ -104,10 +146,124 @@ export default function FarmGameScene({
   const witheredCount = farm.plots.filter((plot) => plot.state === "withered").length;
   const loveBond = loveBondFor(farm.lovePoints);
   const [petSwitcherOpen, setPetSwitcherOpen] = useState(false);
+  const [plantDragActive, setPlantDragActive] = useState(false);
+  const [plantDragPlotIds, setPlantDragPlotIds] = useState<string[]>([]);
+  const plantDragPlotIdsRef = useRef<string[]>([]);
+  const plantDragCropRef = useRef<FarmSceneCrop | null>(null);
+  const [waterDragActive, setWaterDragActive] = useState(false);
+  const [waterDragPlotIds, setWaterDragPlotIds] = useState<string[]>([]);
+  const waterDragPlotIdsRef = useRef<string[]>([]);
+  const emptyPlotIds = useMemo(
+    () => new Set(farm.plots.filter((plot) => plot.state === "empty").map((plot) => plot.id)),
+    [farm.plots],
+  );
+  const growingPlotIds = useMemo(
+    () => new Set(farm.plots.filter((plot) => plot.state === "growing").map((plot) => plot.id)),
+    [farm.plots],
+  );
+  const plantDragPlotIdSet = useMemo(
+    () => new Set(plantDragPlotIds),
+    [plantDragPlotIds],
+  );
+  const waterDragPlotIdSet = useMemo(
+    () => new Set(waterDragPlotIds),
+    [waterDragPlotIds],
+  );
+
+  function addPlantDragPlot(plotId: string) {
+    if (!plantDragCropRef.current || plantingBusy || !emptyPlotIds.has(plotId)) return;
+    setPlantDragPlotIds((current) => {
+      if (current.includes(plotId)) return current;
+      const next = [...current, plotId];
+      plantDragPlotIdsRef.current = next;
+      return next;
+    });
+  }
+
+  function finishPlantDrag() {
+    if (!plantDragActive) return;
+    const crop = plantDragCropRef.current;
+    const plotIds = plantDragPlotIdsRef.current;
+    setPlantDragActive(false);
+    setPlantDragPlotIds([]);
+    plantDragCropRef.current = null;
+    plantDragPlotIdsRef.current = [];
+    if (crop && plotIds.length > 0) onPlantPlots(crop, plotIds);
+  }
+
+  function addWaterDragPlot(plotId: string) {
+    if (wateringBusy || !growingPlotIds.has(plotId)) return;
+    setWaterDragPlotIds((current) => {
+      if (current.includes(plotId)) return current;
+      const next = [...current, plotId];
+      waterDragPlotIdsRef.current = next;
+      return next;
+    });
+  }
+
+  function finishWaterDrag() {
+    if (!waterDragActive) return;
+    const plotIds = waterDragPlotIdsRef.current;
+    setWaterDragActive(false);
+    setWaterDragPlotIds([]);
+    waterDragPlotIdsRef.current = [];
+    if (plotIds.length > 0) onWaterPlots(plotIds);
+  }
+
+  useEffect(() => {
+    if (!plantDragRequest) return;
+    setPlantDragActive(true);
+    plantDragCropRef.current = plantDragRequest.crop;
+    addPlantDragPlot(plantDragRequest.plotId);
+  }, [plantDragRequest?.token]);
+
+  useEffect(() => {
+    if (!waterDragRequest) return;
+    setWaterDragActive(true);
+    addWaterDragPlot(waterDragRequest.plotId);
+  }, [waterDragRequest?.token]);
+
+  useEffect(() => {
+    if (!plantDragActive && !waterDragActive) return;
+    const handlePointerMove = (event: PointerEvent) => {
+      trackPlotDrag(event.clientX, event.clientY);
+    };
+    window.addEventListener("pointermove", handlePointerMove);
+    window.addEventListener("pointerup", finishPlantDrag);
+    window.addEventListener("pointercancel", finishPlantDrag);
+    window.addEventListener("pointerup", finishWaterDrag);
+    window.addEventListener("pointercancel", finishWaterDrag);
+    return () => {
+      window.removeEventListener("pointermove", handlePointerMove);
+      window.removeEventListener("pointerup", finishPlantDrag);
+      window.removeEventListener("pointercancel", finishPlantDrag);
+      window.removeEventListener("pointerup", finishWaterDrag);
+      window.removeEventListener("pointercancel", finishWaterDrag);
+    };
+  });
+
+  function trackPlotDrag(clientX: number, clientY: number) {
+    if (!plantDragActive && !waterDragActive) return;
+    const plotElement = plotElementAtPoint(clientX, clientY);
+    const plotId = plotElement?.dataset.plotId;
+    if (!plotId) return;
+    if (plantDragActive) addPlantDragPlot(plotId);
+    if (waterDragActive) addWaterDragPlot(plotId);
+  }
+
+  function plotAtPoint(clientX: number, clientY: number) {
+    const plotId = plotElementAtPoint(clientX, clientY)?.dataset.plotId;
+    return farm.plots.find((plot) => plot.id === plotId) || null;
+  }
 
   return (
     <main className="farm-visual-page">
-      <div className="farm-game-scene">
+      <div
+        className={`farm-game-scene ${plantDragActive ? "is-planting-mode" : ""} ${
+          waterDragActive ? "is-watering-mode" : ""
+        }`}
+        onPointerMove={(event) => trackPlotDrag(event.clientX, event.clientY)}
+      >
         <BackgroundLayer />
 
         <section className="farm-layer farm-land-layer" aria-label="土地与作物层">
@@ -124,9 +280,29 @@ export default function FarmGameScene({
             return (
               <button
                 key={plot.id}
-                className={`farm-visual-plot state-${plot.state} ${isSelected ? "selected" : ""}`}
+                data-plot-id={plot.id}
+                className={`farm-visual-plot state-${plot.state} ${isSelected ? "selected" : ""} ${
+                  plantDragPlotIdSet.has(plot.id) ? "is-planting-queued" : ""
+                } ${
+                  waterDragPlotIdSet.has(plot.id) ? "is-watering-queued" : ""
+                }`}
                 style={visualRectStyle(rect)}
-                onClick={() => onSelectPlot(plot)}
+                onPointerDown={(event) => {
+                  const hitPlot = plotAtPoint(event.clientX, event.clientY);
+                  if (!hitPlot || !plantDragActive || hitPlot.state !== "empty" || plantingBusy) return;
+                  event.preventDefault();
+                  event.currentTarget.setPointerCapture(event.pointerId);
+                  addPlantDragPlot(hitPlot.id);
+                }}
+                onClick={(event) => {
+                  const hitPlot = plotAtPoint(event.clientX, event.clientY);
+                  if (!hitPlot) return;
+                  if (plantDragActive && hitPlot.state === "empty") {
+                    event.preventDefault();
+                    return;
+                  }
+                  onSelectPlot(hitPlot);
+                }}
                 aria-label={`${plot.crop?.name || "空地"} ${plot.state}`}
               >
                 <SceneAsset asset={plotAsset} label={`${plot.index + 1}号土地`} fill />
@@ -218,13 +394,6 @@ export default function FarmGameScene({
             className="farm-love-hud"
           />
           <LoveBondHud bond={loveBond} />
-          {farm.dailyWish && (
-            <DailyWishHud
-              wish={farm.dailyWish}
-              busy={dailyWishBusy}
-              onComplete={onCompleteDailyWish}
-            />
-          )}
           <div
             className="farm-hud-control farm-name-control"
             style={visualRectStyle(FARM_VISUAL_LAYOUT.hud.farmSign)}
@@ -346,46 +515,6 @@ export default function FarmGameScene({
         </section>
       </div>
     </main>
-  );
-}
-
-function DailyWishHud({
-  wish,
-  busy,
-  onComplete,
-}: {
-  wish: FarmSceneDailyWish;
-  busy: boolean;
-  onComplete: () => void;
-}) {
-  const ready = wish.readyCount >= wish.required;
-  const cropAsset =
-    FARM_VISUAL_ASSETS.crops[
-      wish.cropKey as keyof typeof FARM_VISUAL_ASSETS.crops
-    ]?.mature;
-
-  return (
-    <div
-      className={`farm-daily-wish ${wish.completed ? "completed" : ""}`}
-      style={visualRectStyle(FARM_VISUAL_LAYOUT.hud.dailyWish)}
-      aria-label={`今日心愿：${wish.cropName} ${Math.min(wish.readyCount, wish.required)} / ${wish.required}`}
-    >
-      <div className="farm-daily-wish-crop">
-        <SceneAsset asset={cropAsset} label={`${wish.cropName}成熟作物`} fill />
-      </div>
-      <div className="farm-daily-wish-copy">
-        <b>今日心愿</b>
-        <span>{wish.cropName} {Math.min(wish.readyCount, wish.required)} / {wish.required}</span>
-        <small>+{wish.coinReward} 金币 · +{wish.loveReward} 情侣值</small>
-      </div>
-      <button
-        type="button"
-        disabled={busy || wish.completed || !ready}
-        onClick={onComplete}
-      >
-        {wish.completed ? "已完成" : ready ? "提交" : "准备中"}
-      </button>
-    </div>
   );
 }
 

@@ -151,8 +151,11 @@ export default function ShopClient() {
                 <small>
                   {item.rarity} · 收获 {item.sellPrice}
                 </small>
+                <span className="shop-seed-price">金币 {item.seedPrice || 0}</span>
                 <em>需在农场空地购买</em>
-                <PriceTag price={item.seedPrice || 0} />
+                <Link className="shop-buy-button shop-seed-plant-link" href="/farm">
+                  去种植
+                </Link>
               </article>
             ))}
 

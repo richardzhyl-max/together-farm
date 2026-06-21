@@ -40,8 +40,7 @@
 .farm-pet-switch-item img,
 .farm-plot-dialog > img,
 .farm-dialog-crop > img,
-.farm-dialog-action > img,
-.farm-daily-wish-crop > img {
+.farm-dialog-action > img {
   object-fit: contain;
   pointer-events: none;
 }
@@ -266,6 +265,53 @@
   pointer-events: auto;
   cursor: pointer;
   overflow: visible;
+}
+
+.farm-game-scene.is-planting-mode .farm-visual-plot.state-empty {
+  cursor: copy;
+  touch-action: none;
+}
+
+.farm-game-scene.is-watering-mode .farm-visual-plot.state-growing {
+  cursor: copy;
+  touch-action: none;
+}
+
+.farm-visual-plot.is-planting-queued > img {
+  filter:
+    brightness(1.12)
+    saturate(1.22)
+    drop-shadow(0 0 4px rgba(143, 214, 77, .9))
+    drop-shadow(0 0 8px rgba(255, 240, 130, .72));
+}
+
+.farm-visual-plot.is-planting-queued .farm-plot-selected-layer {
+  opacity: .72;
+}
+
+.farm-visual-plot.is-watering-queued > img {
+  filter:
+    brightness(1.14)
+    saturate(1.24)
+    drop-shadow(0 0 4px rgba(92, 196, 255, .95))
+    drop-shadow(0 0 8px rgba(173, 230, 255, .75));
+}
+
+.farm-visual-plot.is-watering-queued::after {
+  content: "";
+  position: absolute;
+  left: 52%;
+  top: -4%;
+  z-index: 5;
+  width: 14%;
+  aspect-ratio: 1;
+  border-radius: 0 60% 60%;
+  background: linear-gradient(135deg, #effcff 0%, #65c9ff 100%);
+  box-shadow:
+    0 1px 0 #ffffff,
+    0 2px 4px rgba(22, 106, 154, .38);
+  transform: rotate(45deg);
+  pointer-events: none;
 }
 
 .farm-visual-plot > img {
@@ -548,103 +594,6 @@
   transform: translate(-50%, -50%) rotate(-5deg) skewX(-7deg);
   transform-origin: center;
   white-space: nowrap;
-}
-
-.farm-daily-wish {
-  pointer-events: auto;
-  position: absolute;
-  display: grid;
-  grid-template-columns: 22% minmax(0, 1fr) 25%;
-  align-items: center;
-  gap: 3%;
-  border: 2px solid #754013;
-  border-radius: 11px;
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, .46), transparent 35%),
-    linear-gradient(180deg, #fff1b9 0%, #e8bc68 100%);
-  box-shadow:
-    inset 0 0 0 2px rgba(255, 246, 190, .9),
-    inset 0 -3px 0 rgba(116, 62, 20, .18),
-    0 3px 0 #65350f,
-    0 7px 12px rgba(72, 42, 13, .34);
-  padding: 2.2% 3%;
-  color: #70401c;
-  text-shadow: 0 1px rgba(255, 248, 211, .9);
-}
-
-.farm-daily-wish.completed {
-  filter: saturate(.88) brightness(.96);
-}
-
-.farm-daily-wish-crop {
-  position: relative;
-  width: 100%;
-  aspect-ratio: 1;
-  filter: drop-shadow(0 2px 2px rgba(76, 47, 16, .25));
-}
-
-.farm-daily-wish-copy {
-  min-width: 0;
-  display: grid;
-  gap: 1px;
-  line-height: 1.05;
-}
-
-.farm-daily-wish-copy b,
-.farm-daily-wish-copy span,
-.farm-daily-wish-copy small {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.farm-daily-wish-copy b {
-  font-size: clamp(8px, 1.5vw, 13px);
-  font-weight: 900;
-}
-
-.farm-daily-wish-copy span {
-  color: #8a3d13;
-  font-size: clamp(9px, 1.7vw, 14px);
-  font-weight: 900;
-}
-
-.farm-daily-wish-copy small {
-  font-size: clamp(6px, 1.05vw, 9px);
-  font-weight: 800;
-}
-
-.farm-daily-wish button {
-  min-width: 0;
-  border: 2px solid #7d471d;
-  border-radius: 999px;
-  background: linear-gradient(180deg, #74c850 0%, #3c9635 100%);
-  box-shadow:
-    inset 0 1px rgba(255, 255, 255, .45),
-    0 2px 0 #2c6828;
-  padding: 3px 4px 4px;
-  color: #fffbe2;
-  font-family: inherit;
-  font-size: clamp(7px, 1.3vw, 11px);
-  font-weight: 900;
-  line-height: 1;
-  text-shadow: 0 1px #286a28;
-  white-space: nowrap;
-}
-
-.farm-daily-wish button:not(:disabled):active {
-  transform: translateY(1px);
-  box-shadow: inset 0 1px rgba(255, 255, 255, .35), 0 1px 0 #2c6828;
-}
-
-.farm-daily-wish button:disabled {
-  cursor: default;
-  background: linear-gradient(180deg, #d5bd84 0%, #a8783d 100%);
-  box-shadow:
-    inset 0 1px rgba(255, 255, 255, .35),
-    0 2px 0 #6a471d;
-  color: #fff3c8;
-  text-shadow: 0 1px #6a471d;
 }
 
 .farm-name-control > span {
@@ -1026,6 +975,18 @@
   width: 34%;
   aspect-ratio: 1;
   transition: transform .16s ease, filter .16s ease;
+}
+
+.farm-dialog-action-row {
+  display: flex;
+  justify-content: center;
+  gap: clamp(14px, 5vw, 32px);
+  width: 100%;
+}
+
+.farm-dialog-action-row .farm-dialog-action {
+  width: 29%;
+  max-width: 126px;
 }
 
 .farm-dialog-action:hover:not(:disabled),

@@ -10,6 +10,8 @@ import {
 import { SceneAsset, type FarmSceneCrop, type FarmScenePlot } from "./FarmGameScene";
 
 type Action = (path: string, body: object, success: string) => void;
+type PlantDragStart = (crop: FarmSceneCrop, plotId: string) => void;
+type WaterDragStart = (plotId: string) => void;
 
 export default function FarmPlotDialog({
   plot,
@@ -17,6 +19,8 @@ export default function FarmPlotDialog({
   remaining,
   busy,
   action,
+  onStartPlantDrag,
+  onStartWaterDrag,
   onClose,
 }: {
   plot: FarmScenePlot;
@@ -24,6 +28,8 @@ export default function FarmPlotDialog({
   remaining: string;
   busy: string;
   action: Action;
+  onStartPlantDrag: PlantDragStart;
+  onStartWaterDrag: WaterDragStart;
   onClose: () => void;
 }) {
   return (
@@ -48,7 +54,7 @@ export default function FarmPlotDialog({
         </button>
         <h2>{plot.state === "empty" ? "选择种子" : plot.crop?.name}</h2>
         {plot.state === "empty" ? (
-          <SeedOptions plotId={plot.id} busy={busy} action={action} />
+          <SeedOptions plotId={plot.id} busy={busy} onStartPlantDrag={onStartPlantDrag} />
         ) : (
           <div className="farm-dialog-content">
             {plot.crop && (
@@ -67,12 +73,21 @@ export default function FarmPlotDialog({
             {plot.state === "growing" && (
               <>
                 <p className="farm-dialog-status">距离成熟 {remaining}</p>
-                <ActionButton
-                  asset={FARM_VISUAL_ASSETS.dialog.waterButton}
-                  label="浇水加速"
-                  disabled={Boolean(busy)}
-                  onClick={() => action("/api/farm/water", { plotId: plot.id }, "浇水成功，情侣值 +1")}
-                />
+                <div className="farm-dialog-action-row">
+                  <ActionButton
+                    asset={FARM_VISUAL_ASSETS.dialog.waterButton}
+                    label="浇水加速"
+                    disabled={Boolean(busy)}
+                    onClick={() => action("/api/farm/water", { plotId: plot.id }, "浇水成功，情侣值 +1")}
+                    onPointerDown={() => onStartWaterDrag(plot.id)}
+                  />
+                  <ActionButton
+                    asset={FARM_VISUAL_ASSETS.dialog.clearButton}
+                    label="铲掉作物"
+                    disabled={Boolean(busy)}
+                    onClick={() => action("/api/farm/remove-crop", { plotId: plot.id }, "已铲掉作物")}
+                  />
+                </div>
               </>
             )}
             {plot.state === "mature" && (
@@ -104,11 +119,11 @@ export default function FarmPlotDialog({
 function SeedOptions({
   plotId,
   busy,
-  action,
+  onStartPlantDrag,
 }: {
   plotId: string;
   busy: string;
-  action: Action;
+  onStartPlantDrag: PlantDragStart;
 }) {
   const [crops, setCrops] = useState<FarmSceneCrop[]>([]);
 
@@ -124,9 +139,11 @@ function SeedOptions({
         <button
           key={crop.key}
           disabled={Boolean(busy)}
-          onClick={() =>
-            action("/api/farm/plant", { plotId, cropKey: crop.key }, `种下了${crop.name}`)
-          }
+          onPointerDown={(event) => {
+            if (busy) return;
+            event.preventDefault();
+            onStartPlantDrag(crop, plotId);
+          }}
         >
           <SceneAsset asset={FARM_VISUAL_ASSETS.dialog.seedCard} label="种子卡片素材" fill />
           <span className="farm-seed-bag">
@@ -153,14 +170,25 @@ function ActionButton({
   label,
   disabled,
   onClick,
+  onPointerDown,
 }: {
   asset: (typeof FARM_VISUAL_ASSETS.dialog)[keyof typeof FARM_VISUAL_ASSETS.dialog];
   label: string;
   disabled: boolean;
   onClick: () => void;
+  onPointerDown?: () => void;
 }) {
   return (
-    <button className="farm-dialog-action" disabled={disabled} onClick={onClick}>
+    <button
+      className="farm-dialog-action"
+      disabled={disabled}
+      onPointerDown={(event) => {
+        if (!onPointerDown || disabled) return;
+        event.preventDefault();
+        onPointerDown();
+      }}
+      onClick={onPointerDown ? undefined : onClick}
+    >
       <SceneAsset asset={asset} label={`${label}素材`} fill />
       <span>{label}</span>
     </button>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { flushSync } from "react-dom";
 import { useRouter } from "next/navigation";
 import { io } from "socket.io-client";
 import FarmGameScene, {
@@ -70,6 +71,8 @@ export default function FarmClient() {
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [selected, setSelected] = useState<Plot | null>(null);
+  const [plantDragRequest, setPlantDragRequest] = useState<{ crop: Crop; plotId: string; token: number } | null>(null);
+  const [waterDragRequest, setWaterDragRequest] = useState<{ plotId: string; token: number } | null>(null);
   const [busy, setBusy] = useState("");
   const [now, setNow] = useState(Date.now());
 
@@ -123,6 +126,70 @@ export default function FarmClient() {
     setSelected(null);
     await load();
     setTimeout(() => setNotice(""), 2400);
+  }
+
+  async function plantMany(crop: Crop, plotIds: string[]) {
+    const uniquePlotIds = [...new Set(plotIds)];
+    if (!uniquePlotIds.length || busy) return false;
+    const path = "/api/farm/plant-many";
+    setBusy(`${path}:${crop.key}`);
+    setError("");
+    const response = await fetch(path, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ plotIds: uniquePlotIds, cropKey: crop.key }),
+    });
+    const result = await response.json();
+    setBusy("");
+    if (!response.ok) {
+      setError(result.error);
+      return false;
+    }
+    setNotice(
+      result.planted > 0
+        ? `种下 ${result.planted} 颗${crop.name}，花费 ${result.spent} 金币`
+        : "这些土地暂时不能种植",
+    );
+    setSelected(null);
+    await load();
+    setTimeout(() => setNotice(""), 2400);
+    return result.planted > 0;
+  }
+
+  async function waterMany(plotIds: string[]) {
+    const uniquePlotIds = [...new Set(plotIds)];
+    if (!uniquePlotIds.length || busy) return;
+    const path = "/api/farm/water-many";
+    setBusy(path);
+    setError("");
+    const response = await fetch(path, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ plotIds: uniquePlotIds }),
+    });
+    const result = await response.json();
+    setBusy("");
+    if (!response.ok) return setError(result.error);
+    setNotice(
+      result.watered > 0
+        ? `浇水 ${result.watered} 块土地，情侣值 +${result.watered}`
+        : "这些作物暂时不能浇水",
+    );
+    setSelected(null);
+    await load();
+    setTimeout(() => setNotice(""), 2400);
+  }
+
+  function startPlantDrag(crop: Crop, plotId: string) {
+    flushSync(() => {
+      setSelected(null);
+    });
+    setPlantDragRequest({ crop, plotId, token: Date.now() });
+  }
+
+  function startWaterDrag(plotId: string) {
+    setSelected(null);
+    setWaterDragRequest({ plotId, token: Date.now() });
   }
 
   async function harvestAll() {
@@ -180,20 +247,6 @@ export default function FarmClient() {
     setTimeout(() => setNotice(""), 2200);
   }
 
-  async function completeDailyWish() {
-    const path = "/api/farm/daily-wish";
-    setBusy(path);
-    setError("");
-    const response = await fetch(path, { method: "POST" });
-    const result = await response.json();
-    setBusy("");
-    if (!response.ok) return setError(result.error);
-    setNotice(`完成今日心愿，获得 ${result.coinReward} 金币和 ${result.loveReward} 情侣值`);
-    setSelected(null);
-    await load();
-    setTimeout(() => setNotice(""), 2800);
-  }
-
   async function logout() {
     await fetch("/api/auth/logout", { method: "POST" });
     router.push("/login");
@@ -216,6 +269,12 @@ export default function FarmClient() {
       error={error}
       stageForPlot={(plot) => stageFor(plot, now)}
       onSelectPlot={(plot) => setSelected(plot as Plot)}
+      plantDragRequest={plantDragRequest}
+      plantingBusy={busy.startsWith("/api/farm/plant-many")}
+      onPlantPlots={(crop, plotIds) => plantMany(crop as Crop, plotIds)}
+      waterDragRequest={waterDragRequest}
+      wateringBusy={busy === "/api/farm/water-many"}
+      onWaterPlots={waterMany}
       onCopyInvite={() =>
         navigator.clipboard.writeText(farm.inviteCode).then(() => setNotice("邀请码已复制"))
       }
@@ -223,8 +282,6 @@ export default function FarmClient() {
       harvestAllBusy={busy === "/api/farm/harvest-all"}
       onClearWithered={clearWithered}
       clearWitheredBusy={busy === "/api/farm/clear-withered"}
-      onCompleteDailyWish={completeDailyWish}
-      dailyWishBusy={busy === "/api/farm/daily-wish"}
       onChoosePet={choosePet}
       petSwitchBusy={busy.startsWith("/api/farm/pet/active")}
       onLogout={logout}
@@ -240,6 +297,8 @@ export default function FarmClient() {
             remaining={formatRemaining(selected.matureAt, now)}
             busy={busy}
             action={action}
+            onStartPlantDrag={startPlantDrag}
+            onStartWaterDrag={startWaterDrag}
             onClose={() => setSelected(null)}
           />
         ) : null

@@ -177,7 +177,6 @@ export const FARM_VISUAL_LAYOUT = {
     coins: { x: 2.5, y: 2, width: 29, height: 6.4, zIndex: 50 },
     love: { x: 34, y: 2, width: 29, height: 6.4, zIndex: 50 },
     loveBond: { x: 5.4, y: 86, width: 18.5, height: 6.2, zIndex: 42 },
-    dailyWish: { x: 4.5, y: 73.5, width: 32, height: 10.5, zIndex: 54 },
     farmSign: { x: 31, y: 8.5, width: 38, height: 11, zIndex: 45 },
     invite: { x: 77, y: 1.4, width: 14, height: 8, zIndex: 50 },
     harvestAll: { x: 34, y: 77.5, width: 32, height: 5.8, zIndex: 55 },
@@ -204,14 +203,14 @@ export function farmPlotRect(index: number, total: number): VisualRect {
   const config = FARM_VISUAL_LAYOUT.plots;
   const size =
     total <= 4
-      ? { width: 21.5, height: 14.2, columnGap: 2.5, rowGap: 1.8, centerY: 56 }
+      ? { width: 23.5, height: 15.6, columnGap: 1.6, rowGap: .4, centerY: 56 }
       : total <= 9
-        ? { width: 17, height: 11.2, columnGap: 1.5, rowGap: 1.4, centerY: 54.5 }
+        ? { width: 19.2, height: 12.7, columnGap: .8, rowGap: -.4, centerY: 54.5 }
         : total <= 16
-          ? { width: 15.4, height: 12.4, columnGap: -.4, rowGap: -2.8, centerY: 54 }
-          : { width: 11, height: 7.35, columnGap: .8, rowGap: 1, centerY: 54 };
+          ? { width: 16.4, height: 13.3, columnGap: -.8, rowGap: -4.1, centerY: 54 }
+          : { width: 15.8, height: 10.2, columnGap: -.8, rowGap: -5.0, centerY: 53.5 };
   const columns =
-    total <= 4 ? 2 : total <= 9 ? 3 : total <= 16 ? 4 : config.maxColumns;
+    total <= 4 ? 2 : total <= 9 ? 3 : total <= 16 ? 4 : 4;
   const rows = Math.ceil(total / columns);
   const row = Math.floor(index / columns);
   const itemsInRow = Math.min(columns, total - row * columns);
