@@ -1,4 +1,5 @@
 import type { Prisma, PrismaClient } from "@prisma/client";
+import { lockMaturePlotVariants } from "@/lib/crop-variants";
 import { prisma } from "@/lib/prisma";
 
 export type PlotState = "empty" | "growing" | "mature" | "withered";
@@ -176,6 +177,7 @@ export async function farmSnapshot(userId: string) {
   const member = await requireMember(userId);
   await recordDailyLogin(userId, member.farmId);
   await runFairyAutoWater(member.farmId);
+  await prisma.$transaction((tx) => lockMaturePlotVariants(tx, member.farmId));
   const farm = await prisma.farm.findUniqueOrThrow({
     where: { id: member.farmId },
     include: {

@@ -52,6 +52,7 @@ export async function POST() {
           growDurationSeconds: null,
           waterBoostSeconds: 0,
           lastWateredAt: null,
+          variantType: null,
         },
       });
       await tx.farm.update({

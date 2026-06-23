@@ -27,6 +27,7 @@ export async function POST(request: Request) {
           growDurationSeconds: null,
           waterBoostSeconds: 0,
           lastWateredAt: null,
+          variantType: null,
         },
       }),
       prisma.farmEventLog.create({

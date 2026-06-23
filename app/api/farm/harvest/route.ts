@@ -1,6 +1,13 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { getUserId } from "@/lib/auth";
+import {
+  CROP_VARIANT_CONFIG,
+  lockMaturePlotVariants,
+  recordCropCollection,
+  variantReward,
+  type CropVariantType,
+} from "@/lib/crop-variants";
 import { petBonuses, plotState, requireMember } from "@/lib/farm";
 import { apiError, emitFarmUpdate } from "@/lib/http";
 import { prisma } from "@/lib/prisma";
@@ -20,20 +27,55 @@ export async function POST(request: Request) {
     const crop = await prisma.cropConfig.findUnique({ where: { key: plot.cropKey } });
     if (!crop) throw new Error("作物配置不存在");
     const bonuses = await petBonuses(member.farmId);
-    const earned = state === "withered" ? Math.floor(crop.sellPrice * 0.5) : Math.floor(crop.sellPrice * (1 + bonuses.sell));
-    await prisma.$transaction([
-      prisma.farm.update({
-        where: { id: member.farmId },
-        data: { coins: { increment: earned }, lovePoints: { increment: state === "mature" ? 2 : 0 } },
-      }),
-      prisma.plot.update({
+    const result = await prisma.$transaction(async (tx) => {
+      const timestamp = new Date();
+      if (state === "mature" && !plot.variantType) {
+        await lockMaturePlotVariants(tx, member.farmId, timestamp);
+      }
+      const lockedPlot = await tx.plot.findUnique({
         where: { id: plot.id },
-        data: { cropKey: null, plantedAt: null, matureAt: null, witherAt: null, growDurationSeconds: null, waterBoostSeconds: 0, lastWateredAt: null },
-      }),
-      prisma.farmEventLog.create({ data: { farmId: member.farmId, userId, type: "harvested", payload: JSON.stringify({ plotId, cropKey: crop.key, state, earned }) } }),
-    ]);
+        select: { variantType: true },
+      });
+      const variantType =
+        state === "mature" ? ((lockedPlot?.variantType || "normal") as CropVariantType) : "normal";
+      const earned =
+        state === "withered"
+          ? Math.floor(crop.sellPrice * 0.5)
+          : variantReward(crop.sellPrice, bonuses.sell, variantType);
+      const loveReward = state === "mature" ? CROP_VARIANT_CONFIG[variantType].loveReward : 0;
+      const collection =
+        state === "mature"
+          ? await recordCropCollection(tx, {
+              farmId: member.farmId,
+              userId,
+              cropKey: crop.key,
+              variantType,
+              reward: earned,
+              timestamp,
+            })
+          : { firstVariantDiscovery: false };
+
+      await tx.farm.update({
+        where: { id: member.farmId },
+        data: { coins: { increment: earned }, lovePoints: { increment: loveReward } },
+      });
+      await tx.plot.update({
+        where: { id: plot.id },
+        data: { cropKey: null, plantedAt: null, matureAt: null, witherAt: null, growDurationSeconds: null, waterBoostSeconds: 0, lastWateredAt: null, variantType: null },
+      });
+      await tx.farmEventLog.create({
+        data: {
+          farmId: member.farmId,
+          userId,
+          type: "harvested",
+          payload: JSON.stringify({ plotId, cropKey: crop.key, state, earned, variantType, loveReward }),
+        },
+      });
+
+      return { earned, variantType, loveReward, firstVariantDiscovery: collection.firstVariantDiscovery };
+    });
     emitFarmUpdate(member.farmId);
-    return NextResponse.json({ ok: true, earned });
+    return NextResponse.json({ ok: true, ...result });
   } catch (error) {
     return apiError(error);
   }

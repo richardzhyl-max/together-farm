@@ -8,6 +8,7 @@ import FarmGameScene, {
   type FarmScenePlot,
 } from "@/components/game/FarmGameScene";
 import FarmPlotDialog from "@/components/game/FarmPlotDialog";
+import type { CropVariantType } from "@/lib/crop-variants";
 import type { CropVisualStage } from "@/lib/visual-layout";
 
 type Crop = {
@@ -45,6 +46,14 @@ type Farm = {
   } | null;
 };
 
+type HarvestCelebration = {
+  token: number;
+  variantType: Exclude<CropVariantType, "normal">;
+  cropKey?: string;
+  earned: number;
+  firstDiscovery: boolean;
+};
+
 function formatRemaining(target: string | null, now: number) {
   if (!target) return "";
   const seconds = Math.max(0, Math.ceil((new Date(target).getTime() - now) / 1000));
@@ -75,6 +84,7 @@ export default function FarmClient() {
   const [waterDragRequest, setWaterDragRequest] = useState<{ plotId: string; token: number } | null>(null);
   const [busy, setBusy] = useState("");
   const [now, setNow] = useState(Date.now());
+  const [harvestCelebration, setHarvestCelebration] = useState<HarvestCelebration | null>(null);
 
   const load = useCallback(async () => {
     const response = await fetch("/api/farm", { cache: "no-store" });
@@ -122,6 +132,14 @@ export default function FarmClient() {
     const result = await response.json();
     setBusy("");
     if (!response.ok) return setError(result.error);
+    if (path.includes("harvest") && (result.variantType === "golden" || result.variantType === "rainbow")) {
+      setHarvestCelebration({
+        token: Date.now(),
+        variantType: result.variantType,
+        earned: result.earned,
+        firstDiscovery: Boolean(result.firstVariantDiscovery),
+      });
+    }
     setNotice(path.includes("harvest") ? `${success}，获得 ${result.earned} 金币` : success);
     setSelected(null);
     await load();
@@ -170,6 +188,18 @@ export default function FarmClient() {
     const result = await response.json();
     setBusy("");
     if (!response.ok) return setError(result.error);
+    const bestVariant = [...(result.variants || [])]
+      .filter((variant) => variant.variantType === "golden" || variant.variantType === "rainbow")
+      .sort((left, right) => (right.variantType === "rainbow" ? 2 : 1) - (left.variantType === "rainbow" ? 2 : 1))[0];
+    if (bestVariant) {
+      setHarvestCelebration({
+        token: Date.now(),
+        variantType: bestVariant.variantType,
+        cropKey: bestVariant.cropKey,
+        earned: bestVariant.earned,
+        firstDiscovery: Boolean(bestVariant.firstVariantDiscovery || result.firstVariantDiscoveries),
+      });
+    }
     setNotice(
       result.watered > 0
         ? `浇水 ${result.watered} 块土地，情侣值 +${result.watered}`
@@ -289,6 +319,7 @@ export default function FarmClient() {
         setError("");
         setNotice("");
       }}
+      harvestCelebration={harvestCelebration}
       dialog={
         selected ? (
           <FarmPlotDialog

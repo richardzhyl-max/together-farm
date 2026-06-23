@@ -32,7 +32,7 @@ export async function POST(request: Request) {
       if (!paid.count) throw new Error("金币不够购买这颗种子");
       await tx.plot.update({
         where: { id: plot.id },
-        data: { cropKey, plantedAt: now, matureAt, witherAt, growDurationSeconds: growSeconds, waterBoostSeconds: 0, lastWateredAt: null },
+        data: { cropKey, plantedAt: now, matureAt, witherAt, growDurationSeconds: growSeconds, waterBoostSeconds: 0, lastWateredAt: null, variantType: null },
       });
       await tx.farmEventLog.create({ data: { farmId: member.farmId, userId, type: "planted", payload: JSON.stringify({ plotId, cropKey }) } });
     });

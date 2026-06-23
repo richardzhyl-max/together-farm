@@ -8,10 +8,10 @@ datasource db {
 }
 
 model User {
-  id           String          @id @default(cuid())
-  username     String          @unique
+  id           String         @id @default(cuid())
+  username     String         @unique
   passwordHash String
-  createdAt    DateTime        @default(now())
+  createdAt    DateTime       @default(now())
   membership   FarmMember?
   messages     Message[]
   events       FarmEventLog[]
@@ -20,24 +20,25 @@ model User {
 }
 
 model Farm {
-  id              String           @id @default(cuid())
-  name            String
-  inviteCode      String           @unique
-  coins           Int              @default(500)
-  lovePoints      Int              @default(0)
-  plotCount       Int              @default(4)
-  activePetKey    String?
-  autoWateredDate String?
-  createdAt       DateTime         @default(now())
-  updatedAt       DateTime         @updatedAt
-  members         FarmMember[]
-  plots           Plot[]
-  pets            FarmPet[]
-  decorations     FarmDecoration[]
-  messages        Message[]
-  events          FarmEventLog[]
-  loginDays       LoginDay[]
-  orderClaims     OrderClaim[]
+  id                String                @id @default(cuid())
+  name              String
+  inviteCode        String                @unique
+  coins             Int                   @default(500)
+  lovePoints        Int                   @default(0)
+  plotCount         Int                   @default(4)
+  activePetKey      String?
+  autoWateredDate   String?
+  createdAt         DateTime              @default(now())
+  updatedAt         DateTime              @updatedAt
+  members           FarmMember[]
+  plots             Plot[]
+  pets              FarmPet[]
+  decorations       FarmDecoration[]
+  messages          Message[]
+  events            FarmEventLog[]
+  loginDays         LoginDay[]
+  orderClaims       OrderClaim[]
+  collectionEntries CropCollectionEntry[]
 }
 
 model FarmMember {
@@ -63,13 +64,14 @@ model Plot {
   growDurationSeconds Int?
   waterBoostSeconds   Int       @default(0)
   lastWateredAt       DateTime?
+  variantType         String?
   farm                Farm      @relation(fields: [farmId], references: [id], onDelete: Cascade)
 
   @@unique([farmId, index])
 }
 
 model CropConfig {
-  key                 String @id
+  key                 String                @id
   name                String
   emoji               String
   rarity              String
@@ -77,33 +79,49 @@ model CropConfig {
   growDurationSeconds Int
   sellPrice           Int
   witherAfterSeconds  Int
-  enabled             Boolean @default(true)
+  enabled             Boolean               @default(true)
+  collectionEntries   CropCollectionEntry[]
+}
+
+model CropCollectionEntry {
+  id               String     @id @default(cuid())
+  farmId           String
+  cropKey          String
+  variantType      String
+  discoveredAt     DateTime   @default(now())
+  discoveryCount   Int        @default(1)
+  highestSellPrice Int        @default(0)
+  farm             Farm       @relation(fields: [farmId], references: [id], onDelete: Cascade)
+  crop             CropConfig @relation(fields: [cropKey], references: [key])
+
+  @@unique([farmId, cropKey, variantType])
+  @@index([farmId, variantType])
 }
 
 model PetConfig {
-  key             String  @id
-  name            String
-  emoji           String
-  description     String
-  price           Int
-  unlockLove      Int     @default(0)
-  sellBonus       Float   @default(0)
-  growBonus       Float   @default(0)
-  waterCooldown   Float   @default(0)
-  autoWaterPlots  Int     @default(0)
-  uniquePerFarm   Boolean @default(true)
-  enabled         Boolean @default(true)
-  farmPets        FarmPet[]
+  key            String    @id
+  name           String
+  emoji          String
+  description    String
+  price          Int
+  unlockLove     Int       @default(0)
+  sellBonus      Float     @default(0)
+  growBonus      Float     @default(0)
+  waterCooldown  Float     @default(0)
+  autoWaterPlots Int       @default(0)
+  uniquePerFarm  Boolean   @default(true)
+  enabled        Boolean   @default(true)
+  farmPets       FarmPet[]
 }
 
 model DecorationConfig {
-  key          String @id
-  name         String
-  emoji        String
-  price        Int
-  unlockLove   Int    @default(0)
-  enabled      Boolean @default(true)
-  decorations  FarmDecoration[]
+  key         String           @id
+  name        String
+  emoji       String
+  price       Int
+  unlockLove  Int              @default(0)
+  enabled     Boolean          @default(true)
+  decorations FarmDecoration[]
 }
 
 model FarmPet {
@@ -155,13 +173,13 @@ model FarmEventLog {
 }
 
 model LoginDay {
-  id       String @id @default(cuid())
+  id       String  @id @default(cuid())
   farmId   String
   userId   String
   dateKey  String
   rewarded Boolean @default(false)
-  farm     Farm   @relation(fields: [farmId], references: [id], onDelete: Cascade)
-  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  farm     Farm    @relation(fields: [farmId], references: [id], onDelete: Cascade)
+  user     User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, dateKey])
   @@index([farmId, dateKey])

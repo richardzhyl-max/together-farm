@@ -7,6 +7,7 @@ import {
   type CropVisualStage,
   visualRectStyle,
 } from "@/lib/visual-layout";
+import CropVariantVisual from "@/components/game/CropVariantVisual";
 import { SceneAsset, type FarmSceneCrop, type FarmScenePlot } from "./FarmGameScene";
 
 type Action = (path: string, body: object, success: string) => void;
@@ -59,15 +60,23 @@ export default function FarmPlotDialog({
           <div className="farm-dialog-content">
             {plot.crop && (
               <div className="farm-dialog-crop">
-                <SceneAsset
-                  asset={
-                    FARM_VISUAL_ASSETS.crops[
-                      plot.crop.key as keyof typeof FARM_VISUAL_ASSETS.crops
-                    ]?.[stage]
-                  }
-                  label={`${plot.crop.name} ${stage}`}
-                  fill
-                />
+                {plot.state === "mature" && plot.variantType && plot.variantType !== "normal" ? (
+                  <CropVariantVisual
+                    cropKey={plot.crop.key}
+                    cropName={plot.crop.name}
+                    variantType={plot.variantType}
+                  />
+                ) : (
+                  <SceneAsset
+                    asset={
+                      FARM_VISUAL_ASSETS.crops[
+                        plot.crop.key as keyof typeof FARM_VISUAL_ASSETS.crops
+                      ]?.[stage]
+                    }
+                    label={`${plot.crop.name} ${stage}`}
+                    fill
+                  />
+                )}
               </div>
             )}
             {plot.state === "growing" && (

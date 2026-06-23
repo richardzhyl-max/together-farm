@@ -333,6 +333,189 @@
 
 .orders-visual-nav b { font-size: 12px; }
 
+.collection-visual-page {
+  height: 100dvh;
+  display: grid;
+  place-items: start center;
+  overflow: hidden;
+  background: #20252d;
+  color: #70401c;
+}
+
+.collection-game-scene {
+  position: relative;
+  width: min(100vw, 56.5789vh, 860px);
+  height: 100dvh;
+  min-height: 650px;
+  overflow: hidden;
+  background: #83c94d;
+}
+
+.collection-scene-background {
+  position: fixed !important;
+  left: 50% !important;
+  width: min(100vw, 56.5789vh, 860px) !important;
+  transform: translateX(-50%);
+  object-fit: cover;
+  object-position: center top;
+  filter: saturate(.88) brightness(.78);
+}
+
+.collection-scene-wash {
+  position: fixed;
+  inset: 0;
+  left: 50%;
+  z-index: 1;
+  width: min(100vw, 56.5789vh, 860px);
+  transform: translateX(-50%);
+  background:
+    linear-gradient(to bottom, rgba(255, 240, 190, .2), rgba(39, 73, 48, .52)),
+    rgba(255, 244, 196, .08);
+  pointer-events: none;
+}
+
+.collection-header {
+  position: relative;
+  z-index: 8;
+  padding: 18px 18px 8px;
+  text-align: center;
+  color: #fff7d3;
+  text-shadow: 0 2px 3px rgba(58, 37, 18, .55);
+}
+
+.collection-header h1 {
+  margin: 0;
+  font-size: clamp(28px, 8vw, 48px);
+  font-weight: 1000;
+  letter-spacing: 0;
+}
+
+.collection-header p {
+  margin: 3px 0 0;
+  font-size: clamp(12px, 3vw, 17px);
+  font-weight: 900;
+}
+
+.collection-board {
+  position: relative;
+  z-index: 7;
+  height: calc(100dvh - 158px);
+  min-height: 492px;
+  margin: 0 4% 76px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding: 12px;
+  border: 4px solid rgba(92, 51, 21, .82);
+  border-radius: 16px;
+  background: rgba(255, 245, 215, .94);
+  box-shadow:
+    inset 0 0 0 3px rgba(255, 224, 137, .52),
+    0 6px 16px rgba(38, 55, 27, .35);
+  scrollbar-width: thin;
+  scrollbar-color: rgba(117, 66, 31, .72) transparent;
+}
+
+.collection-section + .collection-section {
+  margin-top: 18px;
+}
+
+.collection-section h2 {
+  position: sticky;
+  top: -12px;
+  z-index: 2;
+  margin: -12px -12px 10px;
+  padding: 10px 12px 8px;
+  background: rgba(255, 235, 174, .96);
+  color: #4f3217;
+  font-size: 17px;
+  font-weight: 1000;
+  box-shadow: 0 2px 6px rgba(77, 52, 24, .12);
+}
+
+.collection-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 9px;
+}
+
+.collection-card {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 54px minmax(0, 1fr);
+  gap: 8px;
+  align-items: center;
+  min-height: 88px;
+  border: 2px solid rgba(139, 87, 31, .35);
+  border-radius: 8px;
+  background: rgba(255, 252, 237, .92);
+  padding: 8px;
+}
+
+.collection-card.locked {
+  background: rgba(233, 224, 205, .9);
+  color: #756955;
+}
+
+.collection-card-art {
+  position: relative;
+  width: 54px;
+  height: 54px;
+  display: grid;
+  place-items: center;
+}
+
+.collection-question {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  border: 2px dashed rgba(97, 80, 54, .45);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, .34);
+  color: #7a6a52;
+  font-size: 28px;
+  font-weight: 1000;
+}
+
+.collection-card b {
+  display: block;
+  overflow: hidden;
+  color: #3d2b12;
+  font-size: 14px;
+  font-weight: 1000;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.collection-card small {
+  display: block;
+  overflow: hidden;
+  margin-top: 2px;
+  color: #6b4b25;
+  font-size: 11px;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.collection-section.variant-golden h2 {
+  background: linear-gradient(90deg, rgba(255, 230, 132, .98), rgba(255, 246, 204, .96));
+}
+
+.collection-section.variant-rainbow h2 {
+  background: linear-gradient(90deg, rgba(255, 207, 221, .98), rgba(204, 242, 255, .96), rgba(225, 255, 207, .96));
+}
+
+.collection-visual-nav {
+  grid-template-columns: repeat(5, 1fr);
+}
+
+.collection-visual-nav .orders-nav-art img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
 @media (max-width: 460px) {
   .orders-card {
     grid-template-columns: 44px minmax(0, 1fr) 62px;
@@ -348,5 +531,13 @@
   .orders-visual-nav a {
     padding-inline: 4px;
     font-size: 11px;
+  }
+
+  .collection-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .collection-card {
+    min-height: 82px;
   }
 }

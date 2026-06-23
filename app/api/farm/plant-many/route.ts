@@ -63,6 +63,7 @@ export async function POST(request: Request) {
           growDurationSeconds: growSeconds,
           waterBoostSeconds: 0,
           lastWateredAt: null,
+          variantType: null,
         },
       });
       await tx.farmEventLog.create({

@@ -10,7 +10,7 @@ export async function POST(request: Request) {
     const { plotId } = z.object({ plotId: z.string().min(1) }).parse(await request.json());
     const plot = await prisma.plot.update({
       where: { id: plotId },
-      data: { cropKey: null, plantedAt: null, matureAt: null, witherAt: null, growDurationSeconds: null, waterBoostSeconds: 0, lastWateredAt: null },
+      data: { cropKey: null, plantedAt: null, matureAt: null, witherAt: null, growDurationSeconds: null, waterBoostSeconds: 0, lastWateredAt: null, variantType: null },
     });
     emitFarmUpdate(plot.farmId);
     return NextResponse.json({ ok: true });

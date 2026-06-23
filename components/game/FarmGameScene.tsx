@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import CropVariantVisual from "@/components/game/CropVariantVisual";
 import {
   useEffect,
   useMemo,
@@ -22,6 +23,7 @@ import {
   type VisualAsset,
   visualRectStyle,
 } from "@/lib/visual-layout";
+import type { CropVariantType } from "@/lib/crop-variants";
 
 export type FarmSceneCrop = {
   key: string;
@@ -39,6 +41,7 @@ export type FarmScenePlot = {
   matureAt: string | null;
   growDurationSeconds: number | null;
   waterBoostSeconds: number;
+  variantType: CropVariantType | null;
 };
 
 export type FarmScenePet = {
@@ -88,6 +91,13 @@ type Props = {
   petSwitchBusy: boolean;
   onLogout: () => void;
   onDismissMessage: () => void;
+  harvestCelebration: {
+    token: number;
+    variantType: Exclude<CropVariantType, "normal">;
+    cropKey?: string;
+    earned: number;
+    firstDiscovery: boolean;
+  } | null;
   dialog: ReactNode;
 };
 
@@ -140,6 +150,7 @@ export default function FarmGameScene({
   petSwitchBusy,
   onLogout,
   onDismissMessage,
+  harvestCelebration,
   dialog,
 }: Props) {
   const matureCount = farm.plots.filter((plot) => plot.state === "mature").length;
@@ -307,8 +318,20 @@ export default function FarmGameScene({
               >
                 <SceneAsset asset={plotAsset} label={`${plot.index + 1}号土地`} fill />
                 {!FARM_VISUAL_CONFIG.usePlotStateImageOnly && cropAsset && (
-                  <span className="farm-crop-visual">
-                    <SceneAsset asset={cropAsset} label={`${plot.crop?.name}素材`} fill />
+                  <span
+                    className={`farm-crop-visual ${
+                      plot.state === "mature" && plot.variantType ? `variant-${plot.variantType}` : ""
+                    }`}
+                  >
+                    {plot.state === "mature" && plot.crop && plot.variantType && plot.variantType !== "normal" ? (
+                      <CropVariantVisual
+                        cropKey={plot.crop.key}
+                        cropName={plot.crop.name}
+                        variantType={plot.variantType}
+                      />
+                    ) : (
+                      <SceneAsset asset={cropAsset} label={`${plot.crop?.name}素材`} fill />
+                    )}
                   </span>
                 )}
                 {isSelected && (
@@ -320,7 +343,7 @@ export default function FarmGameScene({
                     />
                   </span>
                 )}
-                {plot.state === "mature" && <span className="farm-mature-status">可收获</span>}
+                {plot.state === "mature" && <span className="farm-mature-status">收</span>}
               </button>
             );
           })}
@@ -468,6 +491,14 @@ export default function FarmGameScene({
           )}
           <Link
             className="farm-hud-control farm-nav-control"
+            style={visualRectStyle(FARM_VISUAL_LAYOUT.hud.collection)}
+            href="/collection"
+          >
+            <SceneAsset asset={FARM_VISUAL_ASSETS.hud.collectionButton} label="图鉴按钮素材" fill />
+            <span>图鉴</span>
+          </Link>
+          <Link
+            className="farm-hud-control farm-nav-control"
             style={visualRectStyle(FARM_VISUAL_LAYOUT.hud.shop)}
             href="/shop"
           >
@@ -506,6 +537,7 @@ export default function FarmGameScene({
         </section>
 
         <section className="farm-layer farm-modal-layer" aria-label="弹窗层">
+          {harvestCelebration && <HarvestCelebration celebration={harvestCelebration} />}
           {(notice || error) && (
             <button className={`farm-scene-message ${error ? "error" : ""}`} onClick={onDismissMessage}>
               {error || notice}
@@ -515,6 +547,43 @@ export default function FarmGameScene({
         </section>
       </div>
     </main>
+  );
+}
+
+function HarvestCelebration({
+  celebration,
+}: {
+  celebration: NonNullable<Props["harvestCelebration"]>;
+}) {
+  const isRainbow = celebration.variantType === "rainbow";
+  return (
+    <div
+      key={celebration.token}
+      className={`farm-harvest-celebration variant-${celebration.variantType}`}
+      aria-live="polite"
+    >
+      {isRainbow && <span className="farm-rainbow-flash" />}
+      <span className="farm-coin-burst">
+        {Array.from({ length: isRainbow ? 12 : 8 }, (_, index) => (
+          <i key={index} style={{ "--coin-index": index } as CSSProperties}>+</i>
+        ))}
+      </span>
+      {isRainbow && (
+        <span className="farm-rainbow-particles">
+          {Array.from({ length: 18 }, (_, index) => (
+            <i key={index} style={{ "--particle-index": index } as CSSProperties} />
+          ))}
+        </span>
+      )}
+      <span className="farm-variant-popup">
+        <b>{isRainbow ? "炫彩变异!" : "金色变异!"}</b>
+        <small>
+          {celebration.firstDiscovery ? "首次发现 · " : ""}
+          金币 +{celebration.earned}
+        </small>
+        {isRainbow && <span className="farm-special-sfx-placeholder" aria-hidden="true" />}
+      </span>
+    </div>
   );
 }
 
